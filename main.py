@@ -1,6 +1,7 @@
 ### imports ###
 import requests
 import re
+import twint
 
 ### request settings ###
 #api key = AIzaSyCHDajHZ7clx29MBJQ2omXfEprzsRw5n6Y
@@ -20,6 +21,7 @@ import re
 ### globals ###
 youtubeVideos = []
 youtubeVideoCounter = 0
+userTweets = []
 
 ### functions ###
 def fetch_youtube_channel(url):
@@ -66,5 +68,27 @@ def fetch_youtube_channel(url):
         else:
             print(str(youtubeVideoCounter) + ". " + str(formatedTitle) + " - " + str(formatedUploadDate))
 
+def fetch_twitter_profile(username):
+    #varialbes
+    c = twint.Config()
+    c.Username = username
+    c.Limit = True
+    c.Hide_output = True
+    c.Store_object = True
+    c.Store_object_tweets_list = userTweets
+
+    #try fetch data
+    try:
+        twint.run.Search(c)
+        print("fetched " + str(len(userTweets)) + " tweets")
+        tCounter = 0
+        for t in userTweets[:10]:
+            tCounter += 1
+            print("#" + str(tCounter) + " - " + t.username + " - " + t.datestamp + " - " + t.tweet)
+    except:
+        print("twitter profile does not exist")
+    
+
 ### tests ###
-fetch_youtube_channel('https://www.youtube.com/c/animalplanet/videos')
+#fetch_youtube_channel('https://www.youtube.com/c/animalplanet/videos')
+fetch_twitter_profile("animalplanet")
