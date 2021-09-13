@@ -4,6 +4,7 @@ import re
 import twint
 import time
 import datetime
+import json
 
 ### request settings ###
 #api key = AIzaSyCHDajHZ7clx29MBJQ2omXfEprzsRw5n6Y
@@ -158,14 +159,36 @@ def year_progress():
     
     print(str(day) + " " + str(month) + " " + str(year) + " - " + str(dayOfTheYear) + "/" + str(totalDaysThisYear) + " - " + str(percentageOfYear)[2:4] + "%")
 
+def add_profile(name, youtube = None, twitter = None):
+    #fetch all saved profiles from json file
+    file = open('profiles.json', "r")
+    profiles = json.load(file)
+    totalProfiles = len(profiles)
+
+    #new profile obj
+    newProfile = {
+        "id": totalProfiles + 1,
+        "name": name, 
+        "youtube": youtube, 
+        "twitter": twitter 
+    }
+
+    #add new profile to json file
+    profiles.append(newProfile)
+    out_file = open("profiles.json", "w")
+    json.dump(profiles, out_file, indent = 6)
+    out_file.close()
+
 ### tests ###
 year_progress()
 print("")
 
-fetch_youtube_channel('https://www.youtube.com/c/animalplanet/videos')
+# fetch_youtube_channel('https://www.youtube.com/c/animalplanet/videos')
 # fetch_youtube_channel('https://www.youtube.com/c/KimerLorens/videos')
 
-fetch_twitter_profile("animalplanet")
+# fetch_twitter_profile("animalplanet")
 # fetch_twitter_profile("elonmusk")
 # fetch_twitter_profile("spacex")
 # fetch_twitter_profile("tesla")
+
+add_profile("test")
