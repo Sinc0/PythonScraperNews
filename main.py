@@ -160,10 +160,26 @@ def year_progress():
     print(str(day) + " " + str(month) + " " + str(year) + " - " + str(dayOfTheYear) + "/" + str(totalDaysThisYear) + " - " + str(percentageOfYear)[2:4] + "%")
 
 def add_profile(name, youtube = None, twitter = None):
-    #fetch all saved profiles from json file
-    file = open('profiles.json', "r")
-    profiles = json.load(file)
-    totalProfiles = len(profiles)
+    #variables
+    profiles = []
+    totalProfiles = 0
+
+    try: 
+        #fetch all saved profiles from profiles.json if exists
+        file = open('profiles.json', "r")
+        profiles = json.load(file)
+        totalProfiles = len(profiles)
+        
+        #check if profile name is available
+        for p in profiles:
+            if p['name'] == name:
+                print("profile name already taken")
+                return
+    
+    except: 
+        #create profiles.json if does not exists
+        file = open('profiles.json', "w")
+        file.close()
 
     #new profile obj
     newProfile = {
@@ -179,6 +195,36 @@ def add_profile(name, youtube = None, twitter = None):
     json.dump(profiles, out_file, indent = 6)
     out_file.close()
 
+def remove_profile(name):
+    #variables
+    profiles = []
+    totalProfiles = 0
+    totalProfilesUpdated = 0
+    
+    try:
+        #fetch all saved profiles from json file
+        file = open('profiles.json', "r")
+        profiles = json.load(file)
+        totalProfiles = len(profiles)
+
+        #remove profile
+        for p in profiles:
+            if p['name'] == name:
+                profiles.pop(p['id'] - 1)
+        
+        #print error message if profile does not exist
+        totalProfilesUpdated = len(profiles)
+        if totalProfiles == totalProfilesUpdated:
+            print("profile " + name + " does not exist")
+            return
+        
+        #update profiles.json
+        out_file = open("profiles.json", "w")
+        json.dump(profiles, out_file, indent = 6)
+        out_file.close()
+    except:
+        print("error something went wrong removing profile")
+
 ### tests ###
 year_progress()
 print("")
@@ -191,4 +237,5 @@ print("")
 # fetch_twitter_profile("spacex")
 # fetch_twitter_profile("tesla")
 
-add_profile("test")
+add_profile("testName", "youtube.com/c/testChannel", "testUsername")
+remove_profile("test")
