@@ -1,0 +1,40 @@
+#:kivy 2.0.0
+
+<StartingScreen>:
+    bl1: testBoxLayout
+    ScrollView:
+        id: svScrollBar2
+        do_scroll_x: False
+        do_scroll_y: True
+        effect_cls: 'ScrollEffect'
+        size_hint_x: 0.2
+        BoxLayout:
+            id: testBoxLayout
+            orientation: "vertical"
+            size_hint_y: None
+            height: self.minimum_height
+            Button:
+                size_hint_y: None
+                text: "+"
+                on_press: root.testAddScrollViewText()
+                disabled: False
+            Button:
+                size_hint_y: None
+                text: "Threading Test"
+                on_press: root.startThreadPrintNewsFeed()
+                disabled: False
+
+    ScrollView:
+        id: svScrollBar
+        effect_cls: 'ScrollEffect'
+        Label:
+            id: svLabel
+            multiline: True
+            text_size: self.width, None
+            size_hint_y: None
+            padding: 10, 10
+            height: self.texture_size[1]
+            halign: 'left'
+            valign: 'top'
+            text: ""
+        

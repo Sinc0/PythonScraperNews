@@ -5,6 +5,16 @@ import twint
 import time
 import datetime
 import json
+from threading import Thread
+import time
+import kivy
+from kivy.app import App
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+# from kivy.uix.textinput import TextInput
+# from kivy.uix.button import Button
+# from kivy.config import Config #what is this?
 
 ### request settings ###
 #api key = AIzaSyCHDajHZ7clx29MBJQ2omXfEprzsRw5n6Y
@@ -26,11 +36,12 @@ youtubeVideos = []
 youtubeVideoCounter = 0
 
 ### functions ###
-def fetch_youtube_channel(url):
+def fetch_youtube_channel(url, self):
     #variables
     requestHeaders = {'user-agent': 'my-app/0.0.1', 'Cookie':'CONSENT=YES+cb.20210418-17-p0.en+FX+917;PREF=hl=en'}
     numberOfVideosLimit = 3
     channelTitle = ""
+    youtubeVideoCounter = 0
 
     #make request
     httpRequest = requests.get(url, headers=requestHeaders)
@@ -49,44 +60,53 @@ def fetch_youtube_channel(url):
         formatChannelTitle2 = str(formatChannelTitle1[0])
         formatChannelTitle3 = formatChannelTitle2[7:]
         channelTitle = formatChannelTitle3[:-18]
-        print(channelTitle + " latest videos:")
+        # print(channelTitle + " latest videos:")
     else:
         print("youtube channel fetch failed")
 
-    #regex youtube video data
-    requestResultText = str(requestResultText).replace("\\u0026", "&")
-    regexYoutubeVideos = re.findall(r'"title":{"runs":\[{"text":"[^.]*"}],"[^.]*"publishedTimeText":{"simpleText":[^.]*ago"', requestResultText)
+    try:
+        #regex youtube video data
+        requestResultText = str(requestResultText).replace("\\u0026", "&")
+        regexYoutubeVideos = re.findall(r'"title":{"runs":\[{"text":"[^.]*"}],"[^.]*"publishedTimeText":{"simpleText":[^.]*ago"', requestResultText)
 
-    for videoTitle in regexYoutubeVideos[:numberOfVideosLimit]:
-        global youtubeVideoCounter
-        youtubeVideoCounter += 1
+        for videoTitle in regexYoutubeVideos[:numberOfVideosLimit]:
+            youtubeVideoCounter += 1
 
-        #format youtube video upload date
-        formatFindUploadDate = re.findall(r':"[\d]*\s[^.]*ago"', videoTitle)
-        formatUploadDateStep1 = str(formatFindUploadDate)[4:]
-        formatUploadDateStep2 = str(formatUploadDateStep1)[:(len(formatUploadDateStep1) - 3)]
-        formatedUploadDate = formatUploadDateStep2
+            #format youtube video upload date
+            formatFindUploadDate = re.findall(r':"[\d]*\s[^.]*ago"', videoTitle)
+            if formatFindUploadDate == []:
+                formatFindUploadDate = re.findall(r':"Streamed\s[\d]*\s[^.]*ago"', videoTitle)
+                formatFindUploadDate = str(formatFindUploadDate).replace("Streamed ", "")
+                formatFindUploadDate = str(formatFindUploadDate).lower()
+            formatUploadDateStep1 = str(formatFindUploadDate)[4:]
+            formatUploadDateStep2 = str(formatUploadDateStep1)[:(len(formatUploadDateStep1) - 3)]
+            formatedUploadDate = formatUploadDateStep2
 
-        #format youtube video title
-        formatFindTitle = re.findall(r'"text":"[^.]*"}],"', videoTitle)
-        formatTitleStep1 = str(formatFindTitle)[10:]
-        formatTitleStep2 = str(formatTitleStep1)[:(len(formatTitleStep1) - 7)]
-        formatTitleStep3 = str(formatTitleStep2).replace("\\\\\"", "\"")
-        formatTitleStep4 = str(formatTitleStep3).replace("\\'", "'")
-        formatTitleStep5 = str(formatTitleStep4).replace("   ", " ")
-        formatTitleStep6 = str(formatTitleStep5).replace("  ", " ")
-        formatedTitle = formatTitleStep6
+            #format youtube video title
+            formatFindTitle = re.findall(r'"text":"[^.]*"}],"', videoTitle)
+            formatTitleStep1 = str(formatFindTitle)[10:]
+            formatTitleStep2 = str(formatTitleStep1)[:(len(formatTitleStep1) - 7)]
+            formatTitleStep3 = str(formatTitleStep2).replace("\\\\\"", "\"")
+            formatTitleStep4 = str(formatTitleStep3).replace("\\'", "'")
+            formatTitleStep5 = str(formatTitleStep4).replace("   ", " ")
+            formatTitleStep6 = str(formatTitleStep5).replace("  ", " ")
+            formatedTitle = formatTitleStep6
 
-        #print youtube data to console
-        if youtubeVideoCounter < 10:
-            # print(" " + str(youtubeVideoCounter) + ". " + str(formatedTitle) + " - " + str(formatedUploadDate))
-            print("#" + str(youtubeVideoCounter) + " - " + str(formatedUploadDate) + " - " + str(formatedTitle))
-        else:
-            print(str(youtubeVideoCounter) + ". " + str(formatedTitle) + " - " + str(formatedUploadDate))
+            #print youtube data to console
+            if youtubeVideoCounter < 10:
+                # print(" " + str(youtubeVideoCounter) + ". " + str(formatedTitle) + " - " + str(formatedUploadDate))
+                # print("#" + str(youtubeVideoCounter) + " - " + "youtube" + " - " + str(formatedUploadDate) + " - " + str(formatedTitle))
+                print(" " + "youtube" + " - " + str(formatedUploadDate) + " - " + str(formatedTitle))
+                self.ids.svLabel.text += "\n" + "youtube" + " - " + str(formatedUploadDate) + ":" + " \n " + str(formatedTitle) + "\n"
+                self.ids.svScrollBar.scroll_y = 0
+            # else:
+            #     print(str(youtubeVideoCounter) + ". " + str(formatedTitle) + " - " + str(formatedUploadDate))
+    except:
+        print("youtube channel does not exist")
         
-    print("")
+    # print("")
 
-def fetch_twitter_profile(username):
+def fetch_twitter_profile(username, self):
     #variables
     numberOfTweetsLimit = 3
     userTweets = []
@@ -101,15 +121,18 @@ def fetch_twitter_profile(username):
     try:
         twint.run.Search(c)
         # print("fetched " + str(len(userTweets)) + " tweets")
-        print(username + " latest tweets:")
+        # print(username + " latest tweets:")
         tCounter = 0
         for t in userTweets[:numberOfTweetsLimit]:
             tCounter += 1
             # print("#" + str(tCounter) + " - " + t.username + " - " + t.datestamp + " - " + t.tweet)
-            print("#" + str(tCounter) + " - " + t.datestamp + " - " + t.tweet)
+            # print("#" + str(tCounter) + " - " + "twitter" + " - " + t.datestamp + " - " + t.tweet)
+            print(" " + "twitter" + " - " + t.datestamp + " - " + t.tweet)
+            self.ids.svLabel.text += "\n" + "twitter" + " - " + t.datestamp.replace("-", "/") + ":" + " \n " + t.tweet + "\n"
+            self.ids.svScrollBar.scroll_y = 0
         
         # print(str(len(userTweets)))
-        print("")
+        # print("")
     except:
         print("twitter profile does not exist")
     
@@ -225,6 +248,29 @@ def remove_profile(name):
     except:
         print("error something went wrong removing profile")
 
+def fetch_news_feed(name, self):
+    #fetch all saved profiles from profiles.json if exists
+    file = open('profiles.json', "r")
+    profiles = json.load(file)
+    totalProfiles = len(profiles)
+    
+    for p in profiles:
+        if p['name'] == name:
+            print(p['name'])
+            self.ids.svLabel.text = ""
+            self.ids.svLabel.text = p['name']
+            self.ids.svScrollBar.scroll_y = 0
+            fetch_youtube_channel(p['youtube'], self)
+            fetch_twitter_profile(p['twitter'], self)
+
+    print("")
+
+def fetch_saved_profiles():
+    #fetch all saved profiles from profiles.json if exists
+    file = open('profiles.json', "r")
+    profiles = json.load(file)
+    return profiles
+
 ### tests ###
 year_progress()
 print("")
@@ -237,5 +283,72 @@ print("")
 # fetch_twitter_profile("spacex")
 # fetch_twitter_profile("tesla")
 
-add_profile("testName", "youtube.com/c/testChannel", "testUsername")
-remove_profile("test")
+# add_profile("testName", "youtube.com/c/testChannel", "testUsername")
+# remove_profile("test")
+
+# fetch_news_feed("animalplanet")
+# fetch_news_feed("elonmusk")
+
+### kivy ###
+#settings
+kivy.require('2.0.0') 
+#Config.set('graphics', 'resizable', 1)
+#Config.set('graphics', 'width', '200')
+#Config.set('graphics', 'height', '200')
+
+#classes
+class StartingScreen(GridLayout):
+    def __init__(self, **var_args):
+        super(StartingScreen, self).__init__(**var_args) # that has been overwritten in a class object. to inherited methods from a parent or sibling class super function can be used to gain access
+        #variables
+        savedProfiles = fetch_saved_profiles()
+
+        #settings
+        self.cols = 2
+        #self.rows = 3
+
+        #add buttons
+        for p in savedProfiles:
+            StartingScreen.testAddProfileButtons(self, p)
+        # print("saved profiles json: " + str(savedProfiles))
+        # print("total saved profiles: " + str(len(savedProfiles)))
+
+
+    def printNewsFeed(self, profile, selfObj):
+        print(profile)
+        print(selfObj)
+        fetch_news_feed(profile['name'], selfObj)
+
+    def startThreadPrintNewsFeed(self, *args):
+        profile = args[0]
+        # print(profile['name'])
+        Thread(target=self.printNewsFeed, kwargs={"profile": profile, "selfObj": self}).start()
+    
+    def testAddScrollViewText(self, event):
+        self.ids.svLabel.text += "\n" + "aksdakskdaskd"
+        self.ids.svScrollBar.scroll_y = 0
+
+    def testAddProfileButtons(self, profile):
+        totalButtons = len(self.bl1.children)
+
+        newButton = Button()
+        newButton.size_hint_y = None
+        newButton.text = "#" + str(totalButtons - 1)
+        # newButton.bind(on_press = self.startThreadPrintNewsFeed)
+        newButton.bind(on_press=lambda *args: self.startThreadPrintNewsFeed(profile))
+
+        # print(str(totalButtons))
+        self.bl1.add_widget(newButton)
+        
+    def callback(self, event):
+        print("callback button pressed")
+
+class mainApp(App): # the Base Class of our Kivy App
+    def build(self):
+        # return a StartingScreen() as a root widget
+        self.title = "Scraper News"
+        return StartingScreen()
+  
+# run program  
+if __name__ == '__main__':
+    mainApp().run()
