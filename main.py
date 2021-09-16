@@ -306,14 +306,23 @@ kivy.require('2.0.0')
 class StartingScreen(Screen):   
     def __init__(self, **var_args):
         super(StartingScreen, self).__init__(**var_args) # that has been overwritten in a class object. to inherited methods from a parent or sibling class super function can be used to gain access
-        # #variables
-        # savedProfiles = fetch_saved_profiles()
+        #variables
+        savedProfiles = fetch_saved_profiles()
+        yearProgress = year_progress().replace(" - ", "\n- ")
 
-        # # add buttons
-        # for p in savedProfiles:
-        #     StartingScreen.testAddProfileButtons(self, p)
+        #add welcome message
+        self.lb1.text = "Year Progress" + "\n"
+        self.lb1.text += "- " + yearProgress + "\n\n"
+        self.lb1.text += "Saved Profiles"
+        
+        #add buttons
+        for p in savedProfiles:
+            # StartingScreen.testAddProfileButtons(self, p)
+            self.lb1.text += "\n" + "- " + p['name']
+
         # print("saved profiles json: " + str(savedProfiles))
         # print("total saved profiles: " + str(len(savedProfiles)))
+    
 
     def on_pre_enter(self, *args):
         print("StartingScreen")
@@ -419,8 +428,7 @@ class AddProfileScreen(Screen):
 
 class mainApp(App): # the Base Class of our Kivy App
     def build(self):
-        test = year_progress()
-        self.title = "Scraper News" + " - " + test
+        self.title = "Scraper News"
         
         #screen manager
         sm = ScreenManager()
