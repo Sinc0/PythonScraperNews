@@ -2,39 +2,117 @@
 
 <StartingScreen>:
     bl1: testBoxLayout
-    ScrollView:
-        id: svScrollBar2
-        do_scroll_x: False
-        do_scroll_y: True
-        effect_cls: 'ScrollEffect'
-        size_hint_x: 0.2
-        BoxLayout:
-            id: testBoxLayout
-            orientation: "vertical"
-            size_hint_y: None
-            height: self.minimum_height
-            Button:
-                size_hint_y: None
-                text: "+"
-                on_press: root.testAddScrollViewText()
-                disabled: False
-            Button:
-                size_hint_y: None
-                text: "Threading Test"
-                on_press: root.startThreadPrintNewsFeed()
-                disabled: False
 
-    ScrollView:
-        id: svScrollBar
-        effect_cls: 'ScrollEffect'
-        Label:
-            id: svLabel
-            multiline: True
-            text_size: self.width, None
-            size_hint_y: None
-            padding: 10, 10
-            height: self.texture_size[1]
-            halign: 'left'
-            valign: 'top'
-            text: ""
+    GridLayout:
+        cols: 2
+        rows: 2
         
+        ScrollView:
+            id: svScrollBar2
+            do_scroll_x: False
+            do_scroll_y: True
+            effect_cls: 'ScrollEffect'
+            size_hint_x: None
+            width: 100
+            BoxLayout:
+                id: testBoxLayout
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                Button:
+                    size_hint_y: None
+                    text: "+"
+                    on_press: root.manager.current = 'add'
+                    disabled: False
+                Button:
+                    size_hint_y: None
+                    text: "Test"
+                    on_press: root.testAddProfileButtons3()
+                    disabled: True
+
+        ScrollView:
+            id: svScrollBar
+            effect_cls: 'ScrollEffect'
+            Label:
+                id: svLabel
+                multiline: True
+                text_size: self.width, None
+                size_hint_y: None
+                padding: 10, 10
+                height: self.texture_size[1]
+                halign: 'left'
+                valign: 'top'
+                text: ""
+
+<AddProfileScreen>:
+    bl2: testBoxLayout
+    ti1: profileName
+    ti2: profileYoutube
+    ti3: profileTwitter
+    
+    GridLayout:
+        cols: 2
+        rows: 1
+
+        ScrollView:
+            id: svScrollBar2
+            do_scroll_x: False
+            do_scroll_y: True
+            effect_cls: 'ScrollEffect'
+            size_hint_x: None
+            width: 100
+            BoxLayout:
+                id: testBoxLayout
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                Button:
+                    size_hint_y: None
+                    text: "+"
+                    on_press: ""
+                    disabled: True
+                Button:
+                    size_hint_y: None
+                    text: "Test"
+                    on_press: ""
+                    disabled: True
+
+        StackLayout:
+            id: testStackLayout1
+            size_hint_y: 1
+            Button:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                text: "Cancel"
+                on_press: root.manager.current = 'start'
+            TextInput:
+                id: profileName
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                font_size: 20
+                hint_text: "Profile Name"
+                halign: "center"
+            TextInput:
+                id: profileYoutube
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                font_size: 20
+                hint_text: "Youtube"
+                halign: "center"
+            TextInput:
+                id: profileTwitter
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                font_size: 20
+                hint_text: "Twitter"
+                halign: "center"
+            Button:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                text: "Add Profile"
+                on_press: root.fetch_profile_inputs()
