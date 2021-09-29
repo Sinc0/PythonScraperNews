@@ -6,8 +6,8 @@
 
     GridLayout:
         cols: 2
-        rows: 2
-        
+        rows: 1
+
         ScrollView:
             id: svScrollBar2
             do_scroll_x: False
@@ -20,30 +20,23 @@
                 orientation: "vertical"
                 size_hint_y: None
                 height: self.minimum_height
-                Button:
-                    size_hint_y: None
-                    text: "+"
-                    on_press: root.manager.current = 'add'
-                    disabled: False
-                Button:
-                    size_hint_y: None
-                    text: "Test"
-                    on_press: root.testAddProfileButtons3()
-                    disabled: True
+                spacing: 1
 
-        ScrollView:
-            id: svScrollBar
-            effect_cls: 'ScrollEffect'
-            Label:
-                id: svLabel
-                multiline: True
-                text_size: self.width, None
-                size_hint_y: None
-                padding: 10, 10
-                height: self.texture_size[1]
-                halign: 'left'
-                valign: 'top'
-                text: ""
+        BoxLayout:
+            orientation: 'vertical'
+            ScrollView:
+                id: svScrollBar
+                effect_cls: 'ScrollEffect'
+                Label:
+                    id: svLabel
+                    multiline: True
+                    text_size: self.width, None
+                    size_hint_y: None
+                    padding: 10, 10
+                    height: self.texture_size[1]
+                    halign: 'left'
+                    valign: 'top'
+                    text: ""
 
 <AddProfileScreen>:
     bl2: testBoxLayout
@@ -62,6 +55,7 @@
             effect_cls: 'ScrollEffect'
             size_hint_x: None
             width: 100
+
             BoxLayout:
                 id: testBoxLayout
                 orientation: "vertical"
@@ -69,24 +63,14 @@
                 height: self.minimum_height
                 Button:
                     size_hint_y: None
-                    text: "+"
-                    on_press: ""
-                    disabled: True
-                Button:
-                    size_hint_y: None
-                    text: "Test"
-                    on_press: ""
-                    disabled: True
+                    text: "<"
+                    on_press: root.manager.current = 'start'
+                    disabled: False
 
         StackLayout:
             id: testStackLayout1
             size_hint_y: 1
-            Button:
-                size_hint_y: None
-                size_hint_x: 1
-                height: 40
-                text: "Cancel"
-                on_press: root.manager.current = 'start'
+
             TextInput:
                 id: profileName
                 size_hint_y: None
@@ -116,4 +100,101 @@
                 size_hint_x: 1
                 height: 40
                 text: "Add Profile"
+                background_color: 'lightgreen'
                 on_press: root.fetch_profile_inputs()
+
+<EditProfileScreen>:
+    bl2: testBoxLayout
+    bl3: testBoxLayout2
+    st1: testStackLayout1
+    ti1: profileName
+    ti2: profileYoutube
+    ti3: profileTwitter
+    
+    GridLayout:
+        cols: 2
+        rows: 1
+
+        ScrollView:
+            id: svScrollBar1
+            do_scroll_x: False
+            do_scroll_y: True
+            effect_cls: 'ScrollEffect'
+            size_hint_x: None
+            width: 100
+
+            BoxLayout:
+                id: testBoxLayout
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+
+                Button:
+                    size_hint_y: None
+                    text: "<"
+                    on_press: root.manager.current = 'start'
+                    disabled: False
+
+        StackLayout:
+            id: testStackLayout1
+            size_hint_y: 1
+
+            TextInput:
+                id: profileName
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                font_size: 20
+                hint_text: "Profile Name"
+                halign: "center"
+            TextInput:
+                id: profileYoutube
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                font_size: 20
+                hint_text: "Youtube"
+                halign: "center"
+            TextInput:
+                id: profileTwitter
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                font_size: 20
+                hint_text: "Twitter"
+                halign: "center"
+            Label:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                text: "Saved Profiles"
+
+            ScrollView:
+                id: svScrollBar2
+                do_scroll_x: False
+                do_scroll_y: True
+                effect_cls: 'ScrollEffect'
+                size_hint_y: None
+                size_hint_x: 1
+                height: 400
+
+                BoxLayout:
+                    id: testBoxLayout2
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    
+            Button:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                background_color: 'red'
+                text: "Delete Profile"
+                on_press: root.DeleteProfile()
+            Button:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                text: "Confirm Edit"
+                on_press: root.testEditProfile()
+                disabled: True

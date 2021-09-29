@@ -7,16 +7,21 @@ import datetime
 import json
 from threading import Thread
 import time
+import requests
+import os
+
+### imports kivy ###
 import kivy
 from kivy.app import App
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-# from kivy.uix.textinput import TextInput
-# from kivy.uix.button import Button
-# from kivy.config import Config #what is this?
+from kivy.config import Config
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.screenmanager import NoTransition
+# from kivy.uix.gridlayout import GridLayout
+# from kivy.uix.boxlayout import BoxLayout
+# from kivy.uix.textinput import TextInput
+# from kivy.uix.button import Button
 
 ### request settings ###
 #api key = AIzaSyCHDajHZ7clx29MBJQ2omXfEprzsRw5n6Y
@@ -33,11 +38,11 @@ from kivy.uix.screenmanager import NoTransition
 #https://www.youtube.com/channel/UCkw4JCwteGrDHIsyIIKo4tQ
 #https://www.googleapis.com/youtube/v3/search?key=AIzaSyCHDajHZ7clx29MBJQ2omXfEprzsRw5n6Y&channelId=UCkw4JCwteGrDHIsyIIKo4tQ&part=snippet,id&order=date&maxResults=20
 
-### globals ###
+### global variables ###
 youtubeVideos = []
 youtubeVideoCounter = 0
 
-### functions ###
+### global functions ###
 def fetch_youtube_channel(url, self):
     #null check
     if url == "":
@@ -55,19 +60,25 @@ def fetch_youtube_channel(url, self):
 
     #handle request result
     if httpRequest.status_code == 200:
-        # print("youtube channel fetch succesful")
+        #variables
         requestResultText = str(httpRequest.text)
         requestResultText = requestResultText.encode('utf8', 'ignore')
         # requestResultText = requestResultText.decode('utf8', 'ignore')
+
+        #prints
+        # print("youtube channel fetch succesful")
         # print(requestResultText)
+
+        #create text file
         with open('test.txt', 'w') as f:
             f.write(str(requestResultText))
 
+        #regex youtube channel title
         formatChannelTitle1 = re.findall(r'<title>.*YouTube</title>', str(requestResultText))
         formatChannelTitle2 = str(formatChannelTitle1[0])
         formatChannelTitle3 = formatChannelTitle2[7:]
         channelTitle = formatChannelTitle3[:-18]
-        # print(channelTitle + " latest videos:")
+        channelTitleFormated = channelTitle.replace(" ", "_").lower()
     else:
         print("youtube channel fetch failed")
 
@@ -198,6 +209,7 @@ def add_profile(self, name, youtube = None, twitter = None):
     profiles = []
     totalProfiles = 0
 
+    #check profile naming errors
     try: 
         #fetch all saved profiles from profiles.json if exists
         file = open('profiles.json', "r")
@@ -209,6 +221,11 @@ def add_profile(self, name, youtube = None, twitter = None):
             if p['name'] == name:
                 print("profile name already taken")
                 return
+
+        #check naming errors
+        if name == "":
+            print("profile name empty")
+            return
     
     except: 
         #create profiles.json if does not exists
@@ -228,6 +245,9 @@ def add_profile(self, name, youtube = None, twitter = None):
     out_file = open("profiles.json", "w")
     json.dump(profiles, out_file, indent = 6)
     out_file.close()
+
+    #try get profile image
+    fetch_profile_image(youtube)
 
 def remove_profile(name):
     #variables
@@ -282,6 +302,62 @@ def fetch_saved_profiles():
     profiles = json.load(file)
     return profiles
 
+def fetch_profile_image(url):
+    #null check
+    if url == "":
+        print("youtube channel is null")
+        return
+
+    #variables
+    requestHeaders = {'user-agent': 'my-app/0.0.1', 'Cookie':'CONSENT=YES+cb.20210418-17-p0.en+FX+917;PREF=hl=en'}
+    httpRequest = requests.get(url, headers=requestHeaders)
+
+    #successful request
+    if httpRequest.status_code == 200:
+        #variables
+        requestResultText = str(httpRequest.text)
+        requestResultText = requestResultText.encode('utf8', 'ignore')
+        # requestResultText = requestResultText.decode('utf8', 'ignore')
+
+        #save html to text file
+        with open('test.txt', 'w') as f:
+            f.write(str(requestResultText))
+
+        #regex find channel title
+        formatChannelTitle1 = re.findall(r'<title>.*YouTube</title>', str(requestResultText))
+        formatChannelTitle2 = str(formatChannelTitle1[0])
+        formatChannelTitle3 = formatChannelTitle2[7:]
+        channelTitle = formatChannelTitle3[:-18]
+        channelTitleFormated = channelTitle.replace(" ", "_").lower()
+        
+        #regex find channel image url
+        formatChannelImage1 = re.findall(r'avatar":{"thumbnails":.*176}', str(requestResultText))
+        formatChannelImage2 = formatChannelImage1[0][23:]
+        formatChannelImage3 = formatChannelImage2.split("},{")[2]
+        formatChannelImage4 = formatChannelImage3[6:-26]
+        formatedChannelImage = formatChannelImage4[1:-1]
+
+        #download channel image
+        response = requests.get(formatedChannelImage)
+        f = open(os.getcwd() + '/thumbnails/' + channelTitleFormated + '.jpg','wb')
+        f.write(response.content)
+        f.close()
+        return True
+
+    #failed request
+    else:
+        # print("profile image fetch failed")
+        return False
+
+def changeScreenToAdd(self):
+    self.manager.current = 'add'
+
+def changeScreenToEdit(self):
+    self.manager.current = 'edit'
+
+def changeScreenToStart(self):
+    self.manager.current = 'start'
+
 ### tests ###
 # year_progress()
 # fetch_youtube_channel('https://www.youtube.com/c/animalplanet/videos')
@@ -294,18 +370,21 @@ def fetch_saved_profiles():
 # remove_profile("test")
 # fetch_news_feed("animalplanet")
 # fetch_news_feed("elonmusk")
+# fetch_profile_image('https://www.youtube.com/c/KimerLorens/videos')
 
 ### kivy ###
+kivy.require('2.0.0')
+
 #settings
-kivy.require('2.0.0') 
-#Config.set('graphics', 'resizable', 1)
+Config.set('graphics', 'resizable', 0)
 #Config.set('graphics', 'width', '200')
 #Config.set('graphics', 'height', '200')
 
 #classes
-class StartingScreen(Screen):   
+class StartingScreen(Screen):
     def __init__(self, **var_args):
         super(StartingScreen, self).__init__(**var_args) # that has been overwritten in a class object. to inherited methods from a parent or sibling class super function can be used to gain access
+        
         #variables
         savedProfiles = fetch_saved_profiles()
         yearProgress = year_progress().replace(" - ", "\n- ")
@@ -314,15 +393,8 @@ class StartingScreen(Screen):
         self.lb1.text = "Year Progress" + "\n"
         self.lb1.text += "- " + yearProgress + "\n\n"
         self.lb1.text += "Saved Profiles"
-        
-        #add buttons
         for p in savedProfiles:
-            # StartingScreen.testAddProfileButtons(self, p)
             self.lb1.text += "\n" + "- " + p['name']
-
-        # print("saved profiles json: " + str(savedProfiles))
-        # print("total saved profiles: " + str(len(savedProfiles)))
-    
 
     def on_pre_enter(self, *args):
         print("StartingScreen")
@@ -330,69 +402,87 @@ class StartingScreen(Screen):
         #variables
         savedProfiles = fetch_saved_profiles()
         totalSavedProfiles = len(savedProfiles)
-        print("total saved profiles: " + str(len(savedProfiles)))
+        # print("total saved profiles: " + str(len(savedProfiles)))
 
-        # add buttons
-        for p in savedProfiles:
+        #clear widgets
+        self.bl1.clear_widgets()
+
+        #create add and edit buttons
+        btnAdd = Button(text = "+", size_hint_y = None)
+        btnAdd.bind(on_press=lambda *args: changeScreenToAdd(self))
+        btnEdit = Button(text = "-", size_hint_y = None)
+        btnEdit.bind(on_press=lambda *args: changeScreenToEdit(self))
+
+        #add create and edit buttons
+        self.bl1.add_widget(btnAdd)
+        self.bl1.add_widget(btnEdit)
+
+        #add saved profile buttons
+        for p in savedProfiles[::-1]:
             # print(str(p))
-            StartingScreen.testAddProfileButtons(self, p, totalSavedProfiles)
+            StartingScreen.AddProfileButtons(self, p, totalSavedProfiles)
+
+        #test remove widgets
+        # totalChildrens = len(self.bl1.children)
+        # self.bl1.remove_widget(self.bl1.children[totalChildrens - 1])
+        # self.bl1.remove_widget(self.bl1.children[totalChildrens - 2])        
 
     def printNewsFeed(self, profile, selfObj):
-        print(profile)
-        print(selfObj)
+        #prints
+        # print(profile)
+        # print(selfObj)
+
+        #fetch news feed
         fetch_news_feed(profile['name'], selfObj)
 
     def startThreadPrintNewsFeed(self, *args):
+        #variables
         profile = args[0]
+
+        #prints
         # print(profile['name'])
+
+        #start thread
         Thread(target=self.printNewsFeed, kwargs={"profile": profile, "selfObj": self}).start()
-    
-    def testAddScrollViewText(self):
-        self.ids.svLabel.text += "\n" + "aksdakskdaskd"
-        self.ids.svScrollBar.scroll_y = 0
 
-    def testAddProfileButtons(self, profile, totalSavedProfiles):
+    def AddProfileButtons(self, profile, totalSavedProfiles):
+        #variables
         totalButtons = len(self.bl1.children)
-        print("total buttons: " + str(totalButtons))
 
+        #prints
+        # print("total buttons: " + str(totalButtons))
+        # print(self.bl1.children)
+
+        #add profile buttons
         if(totalButtons != totalSavedProfiles + 2):
+            #create button
             newButton = Button()
+            newButton.background_normal =  os.getcwd() + "/thumbnails/" + profile['name'].lower() + ".jpg"
             newButton.size_hint_y = None
-            newButton.text = "#" + str(totalButtons - 1)
-            # newButton.bind(on_press = self.startThreadPrintNewsFeed)
             newButton.bind(on_press=lambda *args: self.startThreadPrintNewsFeed(profile))
+            # newButton.text = "#" + str(totalButtons - 1)
+            # newButton.bind(on_press = self.startThreadPrintNewsFeed)
+
+            #add button
             self.bl1.add_widget(newButton)
 
-    def testAddProfileButtons2(self, totalSavedProfiles):
+    def AddFillerButtons(self):
+        #variables
         totalButtons = len(self.bl2.children)
-        # print(totalButtons)
-        
-        if(totalButtons != totalSavedProfiles + 2):
-            newButton = Button()
-            newButton.size_hint_y = None
-            newButton.text = "#" + str(totalButtons - 1)
-            newButton.disabled = True
-            self.bl2.add_widget(newButton)
 
-    def testAddProfileButtons3(self):
-        totalButtons = len(self.bl1.children)
-        print("total buttons: " + str(totalButtons))
-        
-        newButton = Button()
-        newButton.size_hint_y = None
-        newButton.text = "#" + str(totalButtons - 1)
-
-        self.bl1.add_widget(newButton)
-
-    def testAddProfileButtons4(self):
-        # totalButtons = len(self.bl1.children)
+        #prints
         # print("total buttons: " + str(totalButtons))
         
-        newButton = Button()
-        newButton.size_hint_y = None
-        newButton.text = "#"
+        #add filler buttons
+        if(totalButtons < 6):
+            #create button
+            newButton = Button()
+            newButton.size_hint_y = None
+            newButton.text = ""
+            newButton.disabled = True
 
-        self.bl1.add_widget(newButton)
+            #add button
+            self.bl2.add_widget(newButton)
 
 class AddProfileScreen(Screen):
     def __init__(self, **var_args):
@@ -405,41 +495,136 @@ class AddProfileScreen(Screen):
         savedProfiles = fetch_saved_profiles()
         totalSavedProfiles = len(savedProfiles)
         
-        # add buttons
-        for p in savedProfiles:
-            StartingScreen.testAddProfileButtons2(self, totalSavedProfiles)
+        #fill side panel with buttons
+        for x in range(6):
+            StartingScreen.AddFillerButtons(self)
 
     def fetch_profile_inputs(self):
+        #variables
         profileName = self.ti1.text
         profileTwitter = self.ti2.text
         profileYoutube = self.ti3.text
-        print(profileName)
-        print(profileTwitter)
-        print(profileYoutube)
 
+        #prints
+        # print(profileName)
+        # print(profileTwitter)
+        # print(profileYoutube)
+
+        #add profile
         add_profile(self, profileName, profileTwitter, profileYoutube)
 
+        #clear text inputs
         self.ti1.text = ""
         self.ti2.text = ""
         self.ti3.text = ""
 
-        self.manager.current = 'start'
+class EditProfileScreen(Screen):
+    def __init__(self, **var_args):
+        super(EditProfileScreen, self).__init__(**var_args) # that has been overwritten in a class object. to inherited methods from a parent or sibling class super function can be used to gain access
+        
+    def on_pre_enter(self, *args):
+        print("EditProfileScreen")
+        
+        #variables
+        savedProfiles = fetch_saved_profiles()
+        totalSavedProfiles = len(savedProfiles)
+        totalButtons = len(self.ids.testBoxLayout2.children)
 
+        #print profiles info
+        # print(type(savedProfiles))
+        # print("total saved profiles: " + str(len(savedProfiles)))
+        
+        #add saved profiles buttons
+        if totalButtons != totalSavedProfiles:
+            
+            #clear widgets
+            self.ids.testBoxLayout2.clear_widgets()
 
-class mainApp(App): # the Base Class of our Kivy App
+            #add buttons
+            for x in range(totalSavedProfiles):
+                reverseListCount = (totalSavedProfiles - 1) - x # reverse list to make latest added on top
+                EditProfileScreen.AddProfileButtons(self, savedProfiles[reverseListCount])
+                # print(savedProfiles[reverseListCount])
+
+        #fill side panel with buttons
+        for x in range(6):
+            StartingScreen.AddFillerButtons(self)
+
+    def AddProfileButtons(self, profile):
+        #variables
+        # totalButtons = len(self.ids.testBoxLayout2.children)
+
+        #create button
+        newButton = Button()
+        newButton.size_hint_y = None
+        newButton.height = 40
+        newButton.text = profile['name']
+        newButton.bind(on_press=lambda *args: EditProfileScreen.FillTextInputWithData(self, profile))
+        # newButton.size_hint_x = None
+        # newButton.width = 200
+        # newButton.pos_hint = {'x':.349, 'y':0}
+        # newButton.text = "#" + str(totalButtons) + " " + profile['name']
+        # newButton.background_color = 'white'
+
+        #add button
+        self.ids.testBoxLayout2.add_widget(newButton)
+
+    def DeleteProfile(self):
+        #variables
+        name = self.ti1.text
+        youtube = self.ti2.text
+        twitter = self.ti3.text
+        profiles = fetch_saved_profiles()
+
+        #prints
+        # print(name)
+        # print(youtube)
+        # print(twitter)
+        # print(profiles)
+
+        #remove profile from list
+        for p in profiles:
+            if p['name'] == name:
+                # print(p['id'] - 1)
+                profiles.pop(p['id'] - 1)
+
+        #remove widget from list
+        for b in self.bl3.children:
+            # print(str(b) + " " + b.text)
+            if b.text == name:
+                # self.remove_widget(b)
+                b.size_hint_y = 0
+        
+        #add new profile to json file
+        out_file = open("profiles.json", "w")
+        json.dump(profiles, out_file, indent = 6)
+        out_file.close()
+
+        #clear text inputs
+        self.ti1.text = ""
+        self.ti2.text = ""
+        self.ti3.text = ""
+
+    def FillTextInputWithData(self, profile):
+        #set text input data
+        self.ti1.text = profile['name']
+        self.ti2.text = profile['youtube']
+        self.ti3.text = profile['twitter']
+
+class mainApp(App): #the Base Class of our Kivy App
     def build(self):
+        #set window title
         self.title = "Scraper News"
         
         #screen manager
         sm = ScreenManager()
         sm = ScreenManager(transition=NoTransition())
         sm.add_widget(StartingScreen(name='start'))
-        sm.add_widget(AddProfileScreen(name='add'))        
-        # sm.current = 'add'
-
-        # return a StartingScreen() as a root widget
+        sm.add_widget(AddProfileScreen(name='add'))    
+        sm.add_widget(EditProfileScreen(name='edit'))    
+        # sm.current = 'edit'
         return sm
   
-# run program
+#run kivy app
 if __name__ == '__main__':
     mainApp().run()
