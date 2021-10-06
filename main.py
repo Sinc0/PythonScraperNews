@@ -202,46 +202,49 @@ def year_progress():
     #check month name
     if month == 1: 
         dayOfTheYear = JAN + day
-        month = "JAN"
+        month = "Jan"
     if month == 2: 
         dayOfTheYear = FEB + day
-        month = "FEB"
+        month = "Feb"
     if month == 3:
         dayOfTheYear = MAR + day 
-        month = "MAR"
+        month = "Mar"
     if month == 4:
         dayOfTheYear = APR + day
-        month = "APR"
+        month = "Apr"
     if month == 5:
         dayOfTheYear = MAY + day
-        month = "MAY"
+        month = "May"
     if month == 6:
         dayOfTheYear = JUN + day
-        month = "JUN"
+        month = "Jun"
     if month == 7:
         dayOfTheYear = JUL + day
-        month = "JUL"
+        month = "Jul"
     if month == 8:
         dayOfTheYear = AUG + day
-        month = "AUG"
+        month = "Aug"
     if month == 9:
         dayOfTheYear = SEP + day
-        month = "SEP"
+        month = "Sep"
     if month == 10:
         dayOfTheYear = OCT + day
-        month = "OCT"
+        month = "Oct"
     if month == 11:
         dayOfTheYear = NOV + day 
-        month = "NOV"
+        month = "Nov"
     if month == 12:
         dayOfTheYear = DEC + day 
-        month = "DEC"
+        month = "Dec"
             
     #check percentage of year
     percentageOfYear = dayOfTheYear / totalDaysThisYear
     
-    print(str(day) + " " + str(month) + " " + str(year) + " - " + str(dayOfTheYear) + "/" + str(totalDaysThisYear) + " - " + str(percentageOfYear)[2:4] + "%")
-    return str(day) + " " + str(month) + " " + str(year) + " - " + str(dayOfTheYear) + "/" + str(totalDaysThisYear) + " - " + str(percentageOfYear)[2:4] + "%"
+    #formatted date string
+    formattedDate = str(month) + " " + str(day) + " " + str(year) + " - " + str(dayOfTheYear) + "/" + str(totalDaysThisYear) + " - " + str(percentageOfYear)[2:4] + "%"
+    
+    print(formattedDate)
+    return formattedDate
 
 def add_profile(self, name, youtube = None, twitter = None):
     #variables
@@ -345,6 +348,12 @@ def fetch_saved_profiles():
     profiles = json.load(file)
     return profiles
 
+def fetch_saved_favorites():
+    #fetch all saved profiles from favorites.json if exists
+    file = open('favorites.json', "r")
+    favorites = json.load(file)
+    return favorites
+
 def fetch_profile_image(url):
     #null check
     if url == "":
@@ -401,6 +410,9 @@ def changeScreenToEdit(self):
 def changeScreenToStart(self):
     self.manager.current = 'start'
 
+def changeScreenToFavorites(self):
+    self.manager.current = 'favorites'
+
 ### tests ###
 # year_progress()
 # fetch_youtube_channel('https://www.youtube.com/c/animalplanet/videos')
@@ -434,21 +446,28 @@ class StartingScreen(Screen):
         #variables
         savedProfiles = fetch_saved_profiles()
         totalSavedProfiles = len(savedProfiles)
+        btnBackgroundColor = get_color_from_hex("#292f33")
         # print("total saved profiles: " + str(len(savedProfiles)))
 
         #clear widgets
         self.bl1.clear_widgets()
 
-        #create add and edit buttons
-        btnBackgroundColor = get_color_from_hex("#292f33")
+        #create add button
         btnAdd = Button(text = "+", size_hint_y = None, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = 30)
         btnAdd.bind(on_press=lambda *args: changeScreenToAdd(self))
+        
+        #create edit button
         btnEdit = Button(text = "-", size_hint_y = None, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = 49)
         btnEdit.bind(on_press=lambda *args: changeScreenToEdit(self))
+        
+        #create favorite button
+        btnFavorites = Button(text = "*", size_hint_y = None, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = 49)
+        btnFavorites.bind(on_press=lambda *args: changeScreenToFavorites(self))
 
         #add create and edit buttons
         self.bl1.add_widget(btnAdd)
         self.bl1.add_widget(btnEdit)
+        self.bl1.add_widget(btnFavorites)
 
         #add saved profile buttons
         for p in savedProfiles[::-1]:
@@ -481,13 +500,14 @@ class StartingScreen(Screen):
     def AddProfileButtons(self, profile, totalSavedProfiles):
         #variables
         totalButtons = len(self.bl1.children)
+        totalMenuButtons = 3
 
         #prints
         # print("total buttons: " + str(totalButtons))
         # print(self.bl1.children)
 
         #add profile buttons
-        if(totalButtons != totalSavedProfiles + 2):
+        if(totalButtons != totalSavedProfiles + totalMenuButtons):
             #create button
             newButton = Button()
             newButton.background_normal =  os.getcwd() + "/thumbnails/" + profile['name'].lower() + ".jpg"
@@ -808,7 +828,7 @@ class EditProfileScreen(Screen):
                 # self.remove_widget(b)
                 b.size_hint_y = 0
         
-        #add new profile to json file
+        #remove profile from json file
         out_file = open("profiles.json", "w")
         json.dump(profiles, out_file, indent = 6)
         out_file.close()
@@ -824,6 +844,42 @@ class EditProfileScreen(Screen):
         self.ti2.text = profile['youtube']
         self.ti3.text = profile['twitter']
 
+class FavoritesScreen(Screen):
+    def __init__(self, **var_args):
+        super(FavoritesScreen, self).__init__(**var_args) # that has been overwritten in a class object. to inherited methods from a parent or sibling class super function can be used to gain access
+
+    def on_pre_enter(self, *args):
+        print("FavoritesScreen")
+
+        #clear card widgets
+        self.ids.boxLayoutPost.clear_widgets()
+
+        #variables
+        savedProfiles = fetch_saved_profiles()
+        totalSavedProfiles = len(savedProfiles)
+        totalButtons = len(self.ids.boxLayoutPost.children)
+        favorites = fetch_saved_favorites()
+        totalFavorites = len(favorites)
+        print("totalButtons: " + str(totalButtons))
+        print("totalFavorites: " + str(totalFavorites))
+        print(favorites)
+
+        
+        #fill side panel with buttons
+        for x in range(6):
+            StartingScreen.AddFillerButtons(self)
+
+        #add title card
+        if totalButtons < totalFavorites:
+            titleCard = StartingScreen.createTitleCard(self, 'Saved_News', 'type')
+            self.ids.boxLayoutPost.add_widget(titleCard)
+        
+        #add news cards
+        for f in favorites:
+            if totalButtons < totalFavorites:
+                bl = StartingScreen.createNewsCard(self, f['text'], 'youtube', f['profile'])
+                self.ids.boxLayoutPost.add_widget(bl)
+
 class mainApp(App): #the Base Class of our Kivy App
     def build(self):
         #set window title
@@ -835,9 +891,10 @@ class mainApp(App): #the Base Class of our Kivy App
         sm.add_widget(StartingScreen(name='start'))
         sm.add_widget(AddProfileScreen(name='add'))    
         sm.add_widget(EditProfileScreen(name='edit'))    
+        sm.add_widget(FavoritesScreen(name='favorites'))    
         # sm.current = 'edit'
         return sm
-  
+
 #run kivy app
 if __name__ == '__main__':
     mainApp().run()

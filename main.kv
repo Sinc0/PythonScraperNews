@@ -34,41 +34,6 @@
                 height: self.minimum_height
                 spacing: 10
                 padding: 10
-                
-                BoxLayout:
-                    id: testBoxLayoutCopy
-                    orientation: 'horizontal'
-                    size_hint_y: None
-                    height: self.minimum_height
-                    canvas.before:
-                        Color:
-                            rgba: (128/255, 128/255, 128/255, 1)
-                        Rectangle:
-                            size: self.size
-                            pos: self.pos
-                    Label:
-                        id: svLabel
-                        text: "Twitter - 2021/01/01\n\nThese sugar gliders are small marsupials that could probably fit in your palm! These sugar gliders are small marsupials that could probably fit in your palm! These sugar gliders are small marsupials that could probably fit in your palm!"
-                        size_hint_y: None
-                        padding: 20, 20
-                        multiline: True
-                        text_size: self.width, None
-                        disabled: False
-                        height: self.texture_size[1]
-                        halign: 'left'
-                        valign: 'top'
-                        color: 'white'
-                        background_color: 'gray'
-                        background_down: 'gray'
-                    Button:
-                        id: btnSave
-                        size_hint_y: 1
-                        size_hint_x: 0.1
-                        text: "x"
-                        background_color: 'gray'
-                        background_normal: 'gray'
-                        background_down: 'gray'
-                        on_press: root.testFunc()
 
 <AddProfileScreen>:
     bl2: testBoxLayout
@@ -230,3 +195,43 @@
                 text: "Confirm Edit"
                 on_press: root.testEditProfile()
                 disabled: True
+
+<FavoritesScreen>:
+    bl2: testBoxLayout
+    
+    GridLayout:
+        cols: 2
+        rows: 1
+
+        ScrollView:
+            id: svScrollBar2
+            do_scroll_x: False
+            do_scroll_y: True
+            effect_cls: 'ScrollEffect'
+            size_hint_x: None
+            width: 100
+
+            BoxLayout:
+                id: testBoxLayout
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                Button:
+                    size_hint_y: None
+                    text: "<"
+                    on_press: root.manager.current = 'start'
+                    disabled: False
+        
+        ScrollView:
+            id: svScrollBar
+            effect_cls: 'ScrollEffect'
+            
+            BoxLayout:
+                id: boxLayoutPost
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 10
+                padding: 10
+
+        
