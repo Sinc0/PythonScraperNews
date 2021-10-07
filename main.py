@@ -90,10 +90,6 @@ def fetch_youtube_channel(url, self, name):
         requestResultText = str(requestResultText).replace("\\u0026", "&")
         regexYoutubeVideos = re.findall(r'"title":{"runs":\[{"text":"[^.]*"}],"[^.]*"publishedTimeText":{"simpleText":[^.]*ago"', requestResultText)
 
-        #create title card
-        bl = StartingScreen.createTitleCard(self, name, 'youtube')
-        self.ids.boxLayoutPost.add_widget(bl)
-
         for videoTitle in regexYoutubeVideos[:numberOfVideosLimit]:
             youtubeVideoCounter += 1
 
@@ -273,6 +269,10 @@ def add_profile(self, name, youtube = None, twitter = None):
         file = open('profiles.json', "w")
         file.close()
 
+    #youtube url formatting
+    if youtube != "":
+        youtube = youtube + "/videos"
+
     #new profile obj
     newProfile = {
         "id": totalProfiles + 1,
@@ -288,7 +288,7 @@ def add_profile(self, name, youtube = None, twitter = None):
     out_file.close()
 
     #try get profile image
-    fetch_profile_image(youtube)
+    fetch_profile_image(youtube, name)
 
 def remove_profile(name):
     #variables
@@ -329,6 +329,10 @@ def fetch_news_feed(name, self):
     #clear all news card widgets
     self.ids.boxLayoutPost.clear_widgets()
 
+    #create title card
+    bl = StartingScreen.createTitleCard(self, name)
+    self.ids.boxLayoutPost.add_widget(bl)
+
     #fetch profile data
     for p in profiles:
         if p['name'] == name:
@@ -354,47 +358,68 @@ def fetch_saved_favorites():
     favorites = json.load(file)
     return favorites
 
-def fetch_profile_image(url):
-    #null check
-    if url == "":
-        print("youtube channel is null")
-        return
+def fetch_profile_image(url, name):
+    if 'youtube' not in url:
+    #fetch image from google
+        response = requests.get('https://www.google.com/search?q=' + name + 'k&tbm=isch&hl=en-US&cr=countryUS&tbs=isz:i')
 
-    #variables
-    requestHeaders = {'user-agent': 'my-app/0.0.1', 'Cookie':'CONSENT=YES+cb.20210418-17-p0.en+FX+917;PREF=hl=en'}
-    httpRequest = requests.get(url, headers=requestHeaders)
+        if response.status_code == 200:
+            #regex find images
+            regexImages = re.findall(r'src="http\S*;s', response.text)
+            
+            #search hit images 1, 2, 3
+            firstSearchHitImage = regexImages[0][5:-6]
+            secondSearchHitImage = regexImages[1][5:-6]
+            secondSearchHitImage = regexImages[2][5:-6]
 
-    #successful request
-    if httpRequest.status_code == 200:
+            #download image
+            response = requests.get(secondSearchHitImage)
+            
+            #save image to local folder
+            f = open(os.getcwd() + '/thumbnails/' + name + '.jpg','wb')
+            f.write(response.content)
+            f.close()
+
+    elif 'youtube' in url:
+    #fetch image from youtube
         #variables
-        requestResultText = str(httpRequest.text)
-        requestResultText = requestResultText.encode('utf8', 'ignore')
-        # requestResultText = requestResultText.decode('utf8', 'ignore')
+        requestHeaders = {'user-agent': 'my-app/0.0.1', 'Cookie':'CONSENT=YES+cb.20210418-17-p0.en+FX+917;PREF=hl=en'}
+        httpRequest = requests.get(url, headers=requestHeaders)
 
-        #save html to text file
-        with open('test.txt', 'w') as f:
-            f.write(str(requestResultText))
+        #successful request
+        if httpRequest.status_code == 200:
+            #variables
+            requestResultText = str(httpRequest.text)
+            requestResultText = requestResultText.encode('utf8', 'ignore')
+            # requestResultText = requestResultText.decode('utf8', 'ignore')
 
-        #regex find channel title
-        formatChannelTitle1 = re.findall(r'<title>.*YouTube</title>', str(requestResultText))
-        formatChannelTitle2 = str(formatChannelTitle1[0])
-        formatChannelTitle3 = formatChannelTitle2[7:]
-        channelTitle = formatChannelTitle3[:-18]
-        channelTitleFormated = channelTitle.replace(" ", "_").lower()
-        
-        #regex find channel image url
-        formatChannelImage1 = re.findall(r'avatar":{"thumbnails":.*176}', str(requestResultText))
-        formatChannelImage2 = formatChannelImage1[0][23:]
-        formatChannelImage3 = formatChannelImage2.split("},{")[2]
-        formatChannelImage4 = formatChannelImage3[6:-26]
-        formatedChannelImage = formatChannelImage4[1:-1]
+            #save html to text file
+            with open('test.txt', 'w') as f:
+                f.write(str(requestResultText))
 
-        #download channel image
-        response = requests.get(formatedChannelImage)
-        f = open(os.getcwd() + '/thumbnails/' + channelTitleFormated + '.jpg','wb')
-        f.write(response.content)
-        f.close()
-        return True
+            #regex find channel title
+            # formatChannelTitle1 = re.findall(r'<title>.*YouTube</title>', str(requestResultText))
+            # formatChannelTitle2 = str(formatChannelTitle1[0])
+            # formatChannelTitle3 = formatChannelTitle2[7:]
+            # channelTitle = formatChannelTitle3[:-18]
+            # channelTitleFormated = channelTitle.replace(" ", "").lower()
+            
+            #regex find channel image url
+            formatChannelImage1 = re.findall(r'avatar":{"thumbnails":.*176}', str(requestResultText))
+            formatChannelImage2 = formatChannelImage1[0][23:]
+            formatChannelImage3 = formatChannelImage2.split("},{")[2]
+            formatChannelImage4 = formatChannelImage3[6:-26]
+            formatedChannelImage = formatChannelImage4[1:-1]
+
+            #download channel image
+            response = requests.get(formatedChannelImage)
+
+            #save image to local folder
+            f = open(os.getcwd() + '/thumbnails/' + name + '.jpg','wb')
+            f.write(response.content)
+            f.close()
+
+            return True
 
     #failed request
     else:
@@ -412,6 +437,10 @@ def changeScreenToStart(self):
 
 def changeScreenToFavorites(self):
     self.manager.current = 'favorites'
+
+def refreshScreen(self, screenName):
+    self.manager.current = 'blank'
+    self.manager.current = screenName
 
 ### tests ###
 # year_progress()
@@ -439,6 +468,9 @@ Config.set('graphics', 'resizable', 0)
 class StartingScreen(Screen):
     def __init__(self, **var_args):
         super(StartingScreen, self).__init__(**var_args) # that has been overwritten in a class object. to inherited methods from a parent or sibling class super function can be used to gain access
+    
+    def clear_news(self):
+        self.ids.boxLayoutPost.clear_widgets()
 
     def on_pre_enter(self, *args):
         print("StartingScreen")
@@ -448,26 +480,36 @@ class StartingScreen(Screen):
         totalSavedProfiles = len(savedProfiles)
         btnBackgroundColor = get_color_from_hex("#292f33")
         # print("total saved profiles: " + str(len(savedProfiles)))
+        btnHeight = 40
+        btnFontSize = 16
 
         #clear widgets
         self.bl1.clear_widgets()
 
+        #create home button
+        btnClear = Button(text = "Clear", size_hint_y = None, height = btnHeight, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = btnFontSize)
+        btnClear.bind(on_press=lambda *args: StartingScreen.clear_news(self))
+
         #create add button
-        btnAdd = Button(text = "+", size_hint_y = None, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = 30)
+        btnAdd = Button(text = "+", size_hint_y = None, height = btnHeight, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = 30)
         btnAdd.bind(on_press=lambda *args: changeScreenToAdd(self))
         
         #create edit button
-        btnEdit = Button(text = "-", size_hint_y = None, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = 49)
+        btnEdit = Button(text = "-", size_hint_y = None, height = btnHeight, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = 49)
         btnEdit.bind(on_press=lambda *args: changeScreenToEdit(self))
         
         #create favorite button
-        btnFavorites = Button(text = "*", size_hint_y = None, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = 49)
+        btnFavorites = Button(text = "Saved", size_hint_y = None, height = btnHeight, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = btnFontSize)
         btnFavorites.bind(on_press=lambda *args: changeScreenToFavorites(self))
+
+        #create filler button
+        btnFiller = Button(text = "", size_hint_y = None, height = btnHeight, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = btnFontSize)
 
         #add create and edit buttons
         self.bl1.add_widget(btnAdd)
         self.bl1.add_widget(btnEdit)
         self.bl1.add_widget(btnFavorites)
+        self.bl1.add_widget(btnClear)
 
         #add saved profile buttons
         for p in savedProfiles[::-1]:
@@ -550,17 +592,12 @@ class StartingScreen(Screen):
                             s.background_normal = "darkred"
                             s.text = '-'
 
-                            try: 
-                                #fetch all saved favorites from favorites.json if exists
-                                file = open('favorites.json', "r")
-                                favorites = json.load(file)
-                                totalFavorites = len(favorites)
-                                # print("total favorites: " + str(totalFavorites))
-                                # print(favorites)
-                            except: 
-                                #create favorites.json if does not exists
-                                file = open('favorites.json', "w")
-                                file.close()
+                            #fetch all saved favorites from favorites.json if exists
+                            file = open('favorites.json', "r")
+                            favorites = json.load(file)
+                            totalFavorites = len(favorites)
+                            # print("total favorites: " + str(totalFavorites))
+                            # print(favorites)
 
                             #save new favorite
                             newFavorite = {
@@ -595,20 +632,33 @@ class StartingScreen(Screen):
                             totalFavorites = len(favorites)
                             # print("total favorites: " + str(totalFavorites))
                             
+                            #remove selected favorite
                             count = 0
                             for f in favorites:
-                                #remove selected favorite
                                 if f['id'] == cardId:
                                     favorites.pop(count)
                                     out_file = open("favorites.json", "w")
                                     json.dump(favorites, out_file, indent = 6)
                                     out_file.close()
                                 count += 1
+
+                            #refresh favorites
+                            if 'favorites' in str(self):
+                                refreshScreen(self, 'favorites')
                 except:
                     None
-            # print("")
 
-    def createNewsCard(self, text, newsType, profile):
+    def createNewsCard(self, *args):
+        #handle args
+        text = args[0]
+        newsType = args[1]
+        profile = args[2]
+        try: savedAt = args[3]
+        except: savedAt = ""
+
+        #clean text from special characters
+        text = text.replace("\\", "")
+
         #variables
         baseHeight = 120
         baseWidth = 660
@@ -643,20 +693,25 @@ class StartingScreen(Screen):
         #fetch all saved favorites from favorites.json if exists
         file = open('favorites.json', "r")
         favorites = json.load(file)
-        totalFavorites = len(favorites)
+        # totalFavorites = len(favorites)
+        
 
         #format text to id
         btnIdFormatting1 = text.replace(" ", "")
         btnIdFormatting2 = btnIdFormatting1.replace("_", "")
         btnIdFormatting3 = btnIdFormatting2.replace("-", "")
         btnIdFormatting4 = btnIdFormatting3.replace("\n", "")
-        btnIdFormatted = str(btnIdFormatting4[0:40])
+        btnIdFormatted = str(btnIdFormatting4[0:60])
         
         #check if id is already in favorites
-        if btnIdFormatted in str(favorites):
-            #create remove button
-            btn = Button(text = "-", size_hint_x = 0.1, size_hint_y = 1, background_color = 'darkred', background_normal = 'darkred', background_down = 'darkred')
-        elif btnIdFormatted not in str(favorites):
+        try:
+            if btnIdFormatted in str(favorites):
+                #create remove button
+                btn = Button(text = "-", size_hint_x = 0.1, size_hint_y = 1, background_color = 'darkred', background_normal = 'darkred', background_down = 'darkred')
+            elif btnIdFormatted not in str(favorites):
+                #create save button
+                btn = Button(text = "+", size_hint_x = 0.1, size_hint_y = 1, background_color = 'green', background_normal = 'green', background_down = 'green')
+        except:
             #create save button
             btn = Button(text = "+", size_hint_x = 0.1, size_hint_y = 1, background_color = 'green', background_normal = 'green', background_down = 'green')
         
@@ -666,7 +721,7 @@ class StartingScreen(Screen):
         btn.bind(on_press=lambda *args: StartingScreen.saveToFavorites(self, btn.id, profile, newsType, text))
 
         #news card text
-        b2 = Button(text = text)
+        b2 = Button(text = savedAt + text)
         b2.size_hint_y = None
         b2.size_hint_x = 1
         b2.padding = (20, 40)
@@ -696,23 +751,28 @@ class StartingScreen(Screen):
 
         return bl
 
-    def createTitleCard(self, text, newsType):
+    def createTitleCard(self, text):
+        #variables
+        backgroundColor = get_color_from_hex("#292f33")
+        formattedText = ""
+
         #boxlayout
         bl = BoxLayout(orientation = "horizontal", size_hint_x = 1, size_hint_y = None)
         bl.height = 100
         bl.width = 660
 
-        #save button
+        #button text formatting
+        text = str(text).replace(" ", "_")
         text = str(text).split("_")
-        formattedText = ""
         for t in text:
           formattedText += str(t).capitalize() + " "
-          
-        backgroundColor = get_color_from_hex("#292f33")
+
+        #create button 
         btn = Button(text = str(formattedText), size_hint_x = 1, size_hint_y = 1, background_color = backgroundColor, background_normal = 'transparent', background_down = 'transparent')
         btn.color = 'lightgray'
         btn.font_size = 30
 
+        #add button to boxlayout
         bl.add_widget(btn)
 
         return bl
@@ -735,8 +795,8 @@ class AddProfileScreen(Screen):
     def fetch_profile_inputs(self):
         #variables
         profileName = self.ti1.text
-        profileTwitter = self.ti2.text
-        profileYoutube = self.ti3.text
+        profileYoutube = self.ti2.text
+        profileTwitter = self.ti3.text
 
         #prints
         # print(profileName)
@@ -744,7 +804,7 @@ class AddProfileScreen(Screen):
         # print(profileYoutube)
 
         #add profile
-        add_profile(self, profileName, profileTwitter, profileYoutube)
+        add_profile(self, profileName, profileYoutube, profileTwitter)
 
         #clear text inputs
         self.ti1.text = ""
@@ -757,6 +817,9 @@ class EditProfileScreen(Screen):
         
     def on_pre_enter(self, *args):
         print("EditProfileScreen")
+
+        #clear saved profile list
+        self.ids.testBoxLayout2.clear_widgets()
         
         #variables
         savedProfiles = fetch_saved_profiles()
@@ -816,17 +879,19 @@ class EditProfileScreen(Screen):
         # print(profiles)
 
         #remove profile from list
+        count = 0
         for p in profiles:
             if p['name'] == name:
                 # print(p['id'] - 1)
-                profiles.pop(p['id'] - 1)
+                profiles.pop(count)
+            count += 1
 
         #remove widget from list
-        for b in self.bl3.children:
+        # for b in self.bl3.children:
             # print(str(b) + " " + b.text)
-            if b.text == name:
+            # if b.text == name:
                 # self.remove_widget(b)
-                b.size_hint_y = 0
+                # b.size_hint_y = 0
         
         #remove profile from json file
         out_file = open("profiles.json", "w")
@@ -837,6 +902,9 @@ class EditProfileScreen(Screen):
         self.ti1.text = ""
         self.ti2.text = ""
         self.ti3.text = ""
+
+        #refresh profiles list
+        refreshScreen(self, 'edit')
 
     def FillTextInputWithData(self, profile):
         #set text input data
@@ -860,9 +928,9 @@ class FavoritesScreen(Screen):
         totalButtons = len(self.ids.boxLayoutPost.children)
         favorites = fetch_saved_favorites()
         totalFavorites = len(favorites)
-        print("totalButtons: " + str(totalButtons))
-        print("totalFavorites: " + str(totalFavorites))
-        print(favorites)
+        # print("totalButtons: " + str(totalButtons))
+        # print("totalFavorites: " + str(totalFavorites))
+        # print(favorites)
 
         
         #fill side panel with buttons
@@ -870,20 +938,44 @@ class FavoritesScreen(Screen):
             StartingScreen.AddFillerButtons(self)
 
         #add title card
-        if totalButtons < totalFavorites:
-            titleCard = StartingScreen.createTitleCard(self, 'Saved_News', 'type')
+        if totalButtons < totalFavorites or totalButtons == 0:
+            titleCard = StartingScreen.createTitleCard(self, 'Saved_News')
             self.ids.boxLayoutPost.add_widget(titleCard)
         
         #add news cards
-        for f in favorites:
+        for f in favorites[::-1]:
             if totalButtons < totalFavorites:
-                bl = StartingScreen.createNewsCard(self, f['text'], 'youtube', f['profile'])
+                savedAt =  "Saved" + " " + str(f['savedAt'][:-16]).replace("-", "/") + " - " + f['profile'] + " | "
+                bl = StartingScreen.createNewsCard(self, f['text'], 'youtube', f['profile'], savedAt)
                 self.ids.boxLayoutPost.add_widget(bl)
+
+class BlankScreen(Screen):
+    def __init__(self, **var_args):
+        super(BlankScreen, self).__init__(**var_args)
+    
+    def on_pre_enter(self, *args):
+        print("BlankScreen")
 
 class mainApp(App): #the Base Class of our Kivy App
     def build(self):
+        #variables
+        profiles_exists = os.path.exists('profiles.json')
+        favorites_exists = os.path.exists('favorites.json')
+
         #set window title
         self.title = "Scraper News " + str(year_progress())
+
+        #create profiles.json if does not exists
+        if profiles_exists == False:
+            file = open('profiles.json', "w")
+            file.write("[]")
+            file.close()
+
+        #create profiles.json if does not exists
+        if favorites_exists == False:
+            file = open('favorites.json', "w")
+            file.write("[]")
+            file.close()
         
         #screen manager
         sm = ScreenManager()
@@ -891,7 +983,8 @@ class mainApp(App): #the Base Class of our Kivy App
         sm.add_widget(StartingScreen(name='start'))
         sm.add_widget(AddProfileScreen(name='add'))    
         sm.add_widget(EditProfileScreen(name='edit'))    
-        sm.add_widget(FavoritesScreen(name='favorites'))    
+        sm.add_widget(FavoritesScreen(name='favorites'))  
+        sm.add_widget(BlankScreen(name='blank'))
         # sm.current = 'edit'
         return sm
 

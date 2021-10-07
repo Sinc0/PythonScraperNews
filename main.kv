@@ -62,19 +62,24 @@
                     size_hint_y: None
                     text: "<"
                     on_press: root.manager.current = 'start'
+                    font_size: 30
                     disabled: False
 
         StackLayout:
             id: testStackLayout1
             size_hint_y: 1
-
+            Label:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                text: "Add Profile"
             TextInput:
                 id: profileName
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
                 font_size: 20
-                hint_text: "Profile Name"
+                hint_text: "name"
                 halign: "center"
             TextInput:
                 id: profileYoutube
@@ -82,7 +87,7 @@
                 size_hint_x: 1
                 height: 40
                 font_size: 20
-                hint_text: "Youtube"
+                hint_text: "youtube url"
                 halign: "center"
             TextInput:
                 id: profileTwitter
@@ -90,13 +95,13 @@
                 size_hint_x: 1
                 height: 40
                 font_size: 20
-                hint_text: "Twitter"
+                hint_text: "twitter username"
                 halign: "center"
             Button:
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
-                text: "Add Profile"
+                text: "Confirm Add"
                 background_color: 'lightgreen'
                 on_press: root.fetch_profile_inputs()
 
@@ -130,41 +135,50 @@
                     size_hint_y: None
                     text: "<"
                     on_press: root.manager.current = 'start'
+                    font_size: 30
                     disabled: False
 
         StackLayout:
             id: testStackLayout1
             size_hint_y: 1
 
+            Label:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                text: "Delete Profile"
             TextInput:
                 id: profileName
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
                 font_size: 20
-                hint_text: "Profile Name"
+                hint_text: "name"
                 halign: "center"
+                disabled: True
             TextInput:
                 id: profileYoutube
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
                 font_size: 20
-                hint_text: "Youtube"
+                hint_text: "youtube url"
                 halign: "center"
+                disabled: True
             TextInput:
                 id: profileTwitter
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
                 font_size: 20
-                hint_text: "Twitter"
+                hint_text: "twitter username"
                 halign: "center"
+                disabled: True
             Label:
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
-                text: "Saved Profiles"
+                text: "All Profiles"
 
             ScrollView:
                 id: svScrollBar2
@@ -173,7 +187,7 @@
                 effect_cls: 'ScrollEffect'
                 size_hint_y: None
                 size_hint_x: 1
-                height: 400
+                height: 360
 
                 BoxLayout:
                     id: testBoxLayout2
@@ -186,7 +200,7 @@
                 size_hint_x: 1
                 height: 40
                 background_color: 'red'
-                text: "Delete Profile"
+                text: "Confirm Delete"
                 on_press: root.DeleteProfile()
             Button:
                 size_hint_y: None
@@ -220,6 +234,7 @@
                     size_hint_y: None
                     text: "<"
                     on_press: root.manager.current = 'start'
+                    font_size: 30
                     disabled: False
         
         ScrollView:
@@ -234,4 +249,4 @@
                 spacing: 10
                 padding: 10
 
-        
+<BlankScreen>:   

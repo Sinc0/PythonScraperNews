@@ -9,4 +9,6 @@ testKivy2.py
 testKivy2.kv
 testKivyScraperNews.py
 testKivyScraperNews.kv
+testScrapeTwitter.py
+testScrapeTwitter.txt
 thumbnails
