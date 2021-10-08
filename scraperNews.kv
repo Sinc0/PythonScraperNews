@@ -87,7 +87,7 @@
                 size_hint_x: 1
                 height: 40
                 font_size: 20
-                hint_text: "youtube url"
+                hint_text: "youtube channel"
                 halign: "center"
             TextInput:
                 id: profileTwitter
@@ -110,8 +110,6 @@
     bl3: testBoxLayout2
     st1: testStackLayout1
     ti1: profileName
-    ti2: profileYoutube
-    ti3: profileTwitter
     
     GridLayout:
         cols: 2
@@ -156,24 +154,7 @@
                 hint_text: "name"
                 halign: "center"
                 disabled: True
-            TextInput:
-                id: profileYoutube
-                size_hint_y: None
-                size_hint_x: 1
-                height: 40
-                font_size: 20
-                hint_text: "youtube url"
-                halign: "center"
-                disabled: True
-            TextInput:
-                id: profileTwitter
-                size_hint_y: None
-                size_hint_x: 1
-                height: 40
-                font_size: 20
-                hint_text: "twitter username"
-                halign: "center"
-                disabled: True
+
             Label:
                 size_hint_y: None
                 size_hint_x: 1
@@ -187,7 +168,7 @@
                 effect_cls: 'ScrollEffect'
                 size_hint_y: None
                 size_hint_x: 1
-                height: 360
+                height: 440
 
                 BoxLayout:
                     id: testBoxLayout2
@@ -202,13 +183,6 @@
                 background_color: 'red'
                 text: "Confirm Delete"
                 on_press: root.DeleteProfile()
-            Button:
-                size_hint_y: None
-                size_hint_x: 1
-                height: 40
-                text: "Confirm Edit"
-                on_press: root.testEditProfile()
-                disabled: True
 
 <FavoritesScreen>:
     bl2: testBoxLayout
@@ -249,4 +223,4 @@
                 spacing: 10
                 padding: 10
 
-<BlankScreen>:   
+<BlankScreen>:

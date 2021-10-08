@@ -9,6 +9,7 @@ from threading import Thread
 import time
 import requests
 import os
+import webbrowser
 
 ### imports kivy ###
 import kivy
@@ -51,6 +52,9 @@ def fetch_youtube_channel(url, self, name):
     if url == "":
         print("youtube channel is null")
         return
+    if 'http' not in url:
+        print("youtube channel is null")
+        return
 
     #variables
     requestHeaders = {'user-agent': 'my-app/0.0.1', 'Cookie':'CONSENT=YES+cb.20210418-17-p0.en+FX+917;PREF=hl=en'}
@@ -65,8 +69,9 @@ def fetch_youtube_channel(url, self, name):
     if httpRequest.status_code == 200:
         #variables
         requestResultText = str(httpRequest.text)
-        requestResultText = requestResultText.encode('utf8', 'ignore')
-        # requestResultText = requestResultText.decode('utf8', 'ignore')
+        requestResultText = requestResultText.replace(".", "")
+        requestResultText = requestResultText.encode('ascii', 'ignore')
+        # requestResultText = requestResultText.decode('utf8', 'replace')
 
         #prints
         # print("youtube channel fetch succesful")
@@ -88,7 +93,8 @@ def fetch_youtube_channel(url, self, name):
     try:
         #regex youtube video data
         requestResultText = str(requestResultText).replace("\\u0026", "&")
-        regexYoutubeVideos = re.findall(r'"title":{"runs":\[{"text":"[^.]*"}],"[^.]*"publishedTimeText":{"simpleText":[^.]*ago"', requestResultText)
+        # regexYoutubeVideos = re.findall(r'"title":{"runs":\[{"text":"[^.]*"}],"[^.]*"publishedTimeText":{"simpleText":[^.]*ago"', requestResultText)
+        regexYoutubeVideos = re.findall(r'"title":{"runs":\[{"text":"[\w*\s*\d*,*-*!*"*_*\/*:*\\*}*{*\]\'*\.\\*\-*\#*\|*\(*\)*&*+*]*ago"', requestResultText)
 
         for videoTitle in regexYoutubeVideos[:numberOfVideosLimit]:
             youtubeVideoCounter += 1
@@ -246,6 +252,7 @@ def add_profile(self, name, youtube = None, twitter = None):
     #variables
     profiles = []
     totalProfiles = 0
+    youtubeChannel = youtube
 
     try: 
         #fetch all saved profiles from profiles.json if exists
@@ -269,9 +276,16 @@ def add_profile(self, name, youtube = None, twitter = None):
         file = open('profiles.json', "w")
         file.close()
 
-    #youtube url formatting
+    #youtube url check
     if youtube != "":
-        youtube = youtube + "/videos"
+        if 'https://www.youtube.com/' not in youtube:
+            youtube = "https://www.youtube.com/" + youtubeChannel + "/videos"
+
+    fetchProfileImage = fetch_profile_image(youtube, name)
+    
+    if fetchProfileImage == False:
+        youtube = "https://www.youtube.com/user/" + youtubeChannel + "/videos"
+        fetch_profile_image(youtube, name)
 
     #new profile obj
     newProfile = {
@@ -287,38 +301,37 @@ def add_profile(self, name, youtube = None, twitter = None):
     json.dump(profiles, out_file, indent = 6)
     out_file.close()
 
-    #try get profile image
-    fetch_profile_image(youtube, name)
-
-def remove_profile(name):
-    #variables
-    profiles = []
-    totalProfiles = 0
-    totalProfilesUpdated = 0
+# def remove_profile(name):
+#     #variables
+#     profiles = []
+#     totalProfiles = 0
+#     totalProfilesUpdated = 0
     
-    try:
-        #fetch all saved profiles from json file
-        file = open('profiles.json', "r")
-        profiles = json.load(file)
-        totalProfiles = len(profiles)
+#     try:
+#         #fetch all saved profiles from json file
+#         file = open('profiles.json', "r")
+#         profiles = json.load(file)
+#         totalProfiles = len(profiles)
 
-        #remove profile
-        for p in profiles:
-            if p['name'] == name:
-                profiles.pop(p['id'] - 1)
+#         #remove profile
+#         for p in profiles:
+#             if p['name'] == name:
+#                 profiles.pop(p['id'] - 1)
         
-        #print error message if profile does not exist
-        totalProfilesUpdated = len(profiles)
-        if totalProfiles == totalProfilesUpdated:
-            print("profile " + name + " does not exist")
-            return
+#         #print error message if profile does not exist
+#         totalProfilesUpdated = len(profiles)
+#         if totalProfiles == totalProfilesUpdated:
+#             print("profile " + name + " does not exist")
+#             return
+
+#         #update profiles.json
+#         out_file = open("profiles.json", "w")
+#         json.dump(profiles, out_file, indent = 6)
+#         out_file.close()
+
+#     except:
+#         print("error something went wrong removing profile")
         
-        #update profiles.json
-        out_file = open("profiles.json", "w")
-        json.dump(profiles, out_file, indent = 6)
-        out_file.close()
-    except:
-        print("error something went wrong removing profile")
 
 def fetch_news_feed(name, self):
     #fetch all saved profiles from profiles.json if exists
@@ -390,26 +403,18 @@ def fetch_profile_image(url, name):
         if httpRequest.status_code == 200:
             #variables
             requestResultText = str(httpRequest.text)
-            requestResultText = requestResultText.encode('utf8', 'ignore')
+            requestResultText = requestResultText.encode('ascii', 'ignore')
             # requestResultText = requestResultText.decode('utf8', 'ignore')
-
-            #save html to text file
-            with open('test.txt', 'w') as f:
-                f.write(str(requestResultText))
-
-            #regex find channel title
-            # formatChannelTitle1 = re.findall(r'<title>.*YouTube</title>', str(requestResultText))
-            # formatChannelTitle2 = str(formatChannelTitle1[0])
-            # formatChannelTitle3 = formatChannelTitle2[7:]
-            # channelTitle = formatChannelTitle3[:-18]
-            # channelTitleFormated = channelTitle.replace(" ", "").lower()
             
             #regex find channel image url
-            formatChannelImage1 = re.findall(r'avatar":{"thumbnails":.*176}', str(requestResultText))
-            formatChannelImage2 = formatChannelImage1[0][23:]
-            formatChannelImage3 = formatChannelImage2.split("},{")[2]
-            formatChannelImage4 = formatChannelImage3[6:-26]
-            formatedChannelImage = formatChannelImage4[1:-1]
+            try:
+                formatChannelImage1 = re.findall(r'avatar":{"thumbnails":.*176}', str(requestResultText))
+                formatChannelImage2 = formatChannelImage1[0][23:]
+                formatChannelImage3 = formatChannelImage2.split("},{")[2]
+                formatChannelImage4 = formatChannelImage3[6:-26]
+                formatedChannelImage = formatChannelImage4[1:-1]
+            except:
+                return False
 
             #download channel image
             response = requests.get(formatedChannelImage)
@@ -438,23 +443,17 @@ def changeScreenToStart(self):
 def changeScreenToFavorites(self):
     self.manager.current = 'favorites'
 
+def changeScreenToMenu(self):
+    self.manager.current = 'menu'
+
 def refreshScreen(self, screenName):
     self.manager.current = 'blank'
     self.manager.current = screenName
 
+def openNewsInWebBrowser(self, searchString):
+    webbrowser.open_new('http://duckduckgo.com/?q=' + searchString)
+
 ### tests ###
-# year_progress()
-# fetch_youtube_channel('https://www.youtube.com/c/animalplanet/videos')
-# fetch_youtube_channel('https://www.youtube.com/c/KimerLorens/videos')
-# fetch_twitter_profile("animalplanet")
-# fetch_twitter_profile("elonmusk")
-# fetch_twitter_profile("spacex")
-# fetch_twitter_profile("tesla")
-# add_profile("testName", "youtube.com/c/testChannel", "testUsername")
-# remove_profile("test")
-# fetch_news_feed("animalplanet")
-# fetch_news_feed("elonmusk")
-# fetch_profile_image('https://www.youtube.com/c/KimerLorens/videos')
 
 ### kivy ###
 kivy.require('2.0.0')
@@ -508,8 +507,8 @@ class StartingScreen(Screen):
         #add create and edit buttons
         self.bl1.add_widget(btnAdd)
         self.bl1.add_widget(btnEdit)
-        self.bl1.add_widget(btnFavorites)
         self.bl1.add_widget(btnClear)
+        self.bl1.add_widget(btnFavorites)
 
         #add saved profile buttons
         for p in savedProfiles[::-1]:
@@ -542,7 +541,7 @@ class StartingScreen(Screen):
     def AddProfileButtons(self, profile, totalSavedProfiles):
         #variables
         totalButtons = len(self.bl1.children)
-        totalMenuButtons = 3
+        totalMenuButtons = 4
 
         #prints
         # print("total buttons: " + str(totalButtons))
@@ -743,6 +742,8 @@ class StartingScreen(Screen):
         #     b2.background_color = get_color_from_hex("#e52d27")
         #     b2.background_normal = 'transparent'
         #     b2.background_down = 'transparent'
+        searchString = text.split("\n")[1]
+        b2.bind(on_press=lambda *args: openNewsInWebBrowser(self, searchString))
 
         #add widgets to boxlayout
         # bl.add_widget(lbl)
@@ -751,7 +752,14 @@ class StartingScreen(Screen):
 
         return bl
 
-    def createTitleCard(self, text):
+    def createTitleCard(self, *args):
+        #handle args
+        text = args[0]
+        try:
+            menuType = args[1]
+        except:
+            menuType = "null"
+
         #variables
         backgroundColor = get_color_from_hex("#292f33")
         formattedText = ""
@@ -771,11 +779,32 @@ class StartingScreen(Screen):
         btn = Button(text = str(formattedText), size_hint_x = 1, size_hint_y = 1, background_color = backgroundColor, background_normal = 'transparent', background_down = 'transparent')
         btn.color = 'lightgray'
         btn.font_size = 30
+        if menuType == 'add':
+            btn.bind(on_press=lambda *args: changeScreenToAdd(self))
+        elif menuType == 'delete':
+            btn.bind(on_press=lambda *args: changeScreenToEdit(self))
+        elif menuType == 'favorites':
+            btn.bind(on_press=lambda *args: changeScreenToFavorites(self))
+        elif menuType == 'clear':
+            btn.bind(on_press=lambda *args: StartingScreen.clear_news(self))
 
         #add button to boxlayout
         bl.add_widget(btn)
 
         return bl
+
+    def showMenu(self):
+        #create title card
+        titleCardAdd = StartingScreen.createTitleCard(self, 'Add', 'add')
+        titleCardDelete = StartingScreen.createTitleCard(self, 'Delete', 'delete')
+        titleCardFavorites = StartingScreen.createTitleCard(self, 'Saved', 'favorites')
+        # titleCardClear = StartingScreen.createTitleCard(self, 'Clear', 'clear')
+        
+        #add title card
+        self.ids.boxLayoutPost.add_widget(titleCardAdd)
+        self.ids.boxLayoutPost.add_widget(titleCardDelete)
+        self.ids.boxLayoutPost.add_widget(titleCardFavorites)
+        # self.ids.boxLayoutPost.add_widget(titleCardClear)
 
 class AddProfileScreen(Screen):
     def __init__(self, **var_args):
@@ -868,8 +897,6 @@ class EditProfileScreen(Screen):
     def DeleteProfile(self):
         #variables
         name = self.ti1.text
-        youtube = self.ti2.text
-        twitter = self.ti3.text
         profiles = fetch_saved_profiles()
 
         #prints
@@ -898,10 +925,18 @@ class EditProfileScreen(Screen):
         json.dump(profiles, out_file, indent = 6)
         out_file.close()
 
+        #remove thumbnail file
+        thumbnails = os.listdir(os.getcwd() + '/thumbnails')
+        for t in thumbnails:
+            imageFile = os.getcwd() + '/thumbnails' + '/' + t
+            if name in t:
+                try:
+                    os.remove(imageFile)
+                except:
+                    print("delete thumbnail " + name + " failed")
+
         #clear text inputs
         self.ti1.text = ""
-        self.ti2.text = ""
-        self.ti3.text = ""
 
         #refresh profiles list
         refreshScreen(self, 'edit')
@@ -909,8 +944,6 @@ class EditProfileScreen(Screen):
     def FillTextInputWithData(self, profile):
         #set text input data
         self.ti1.text = profile['name']
-        self.ti2.text = profile['youtube']
-        self.ti3.text = profile['twitter']
 
 class FavoritesScreen(Screen):
     def __init__(self, **var_args):
@@ -956,11 +989,12 @@ class BlankScreen(Screen):
     def on_pre_enter(self, *args):
         print("BlankScreen")
 
-class mainApp(App): #the Base Class of our Kivy App
+class scraperNewsApp(App): #the Base Class of our Kivy App
     def build(self):
         #variables
         profiles_exists = os.path.exists('profiles.json')
         favorites_exists = os.path.exists('favorites.json')
+        thumbnails_exists = os.path.isdir('thumbnails')
 
         #set window title
         self.title = "Scraper News " + str(year_progress())
@@ -976,6 +1010,10 @@ class mainApp(App): #the Base Class of our Kivy App
             file = open('favorites.json', "w")
             file.write("[]")
             file.close()
+
+        #create thumbnails folder if does not exists
+        if thumbnails_exists == False:
+            os.mkdir('thumbnails')
         
         #screen manager
         sm = ScreenManager()
@@ -990,4 +1028,4 @@ class mainApp(App): #the Base Class of our Kivy App
 
 #run kivy app
 if __name__ == '__main__':
-    mainApp().run()
+    scraperNewsApp().run()

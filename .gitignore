@@ -1,7 +1,12 @@
+__pycache__
+build
+dist
+*.env
 design1.png
 temp.txt
 notes.txt
 test.txt
+tests.txt
 profiles.json
 favorites.json
 testKivy1.py
@@ -11,4 +16,5 @@ testKivyScraperNews.py
 testKivyScraperNews.kv
 testScrapeTwitter.py
 testScrapeTwitter.txt
+testOU.py
 thumbnails
