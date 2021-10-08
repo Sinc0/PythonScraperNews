@@ -1,4 +1,4 @@
-### imports ###
+### imports general ###
 import requests
 import re
 import twint
@@ -21,32 +21,8 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.screenmanager import NoTransition
 from kivy.uix.boxlayout import BoxLayout
 from kivy.utils import get_color_from_hex
-# from kivy.graphics import Rectangle, Color
-# from kivy.utils import rgba
-# from kivy.uix.gridlayout import GridLayout
-# from kivy.uix.textinput import TextInput
-# from kivy.uix.button import Button
 
-### request settings ###
-#api key = AIzaSyCHDajHZ7clx29MBJQ2omXfEprzsRw5n6Y
-#cookie settings = 'Cookie':'CONSENT=YES+cb.20210418-17-p0.en+FX+917;PREF=hl=en'
-
-### regex history ###
-#"title":{"runs":[{"text":"
-#"width":336,"height":188}]},"title":{"runs":[{"text":"
-#"width":336,"height":188}]},"title":{"runs":\[{"text":"[^.]*"}],"[^.]*"publishedTimeText":{"simpleText":[^.]*ago
-#"title":{"runs":\[{"text":"[^.]*"}],"[^.]*"publishedTimeText":{"simpleText":[^.]*ago"
-#"text":"[^.]*"}],"
-
-### notes ###
-#https://www.youtube.com/channel/UCkw4JCwteGrDHIsyIIKo4tQ
-#https://www.googleapis.com/youtube/v3/search?key=AIzaSyCHDajHZ7clx29MBJQ2omXfEprzsRw5n6Y&channelId=UCkw4JCwteGrDHIsyIIKo4tQ&part=snippet,id&order=date&maxResults=20
-
-### global variables ###
-youtubeVideos = []
-youtubeVideoCounter = 0
-
-### global functions ###
+### functions ###
 def fetch_youtube_channel(url, self, name):
     #null check
     if url == "":
@@ -301,38 +277,6 @@ def add_profile(self, name, youtube = None, twitter = None):
     json.dump(profiles, out_file, indent = 6)
     out_file.close()
 
-# def remove_profile(name):
-#     #variables
-#     profiles = []
-#     totalProfiles = 0
-#     totalProfilesUpdated = 0
-    
-#     try:
-#         #fetch all saved profiles from json file
-#         file = open('profiles.json', "r")
-#         profiles = json.load(file)
-#         totalProfiles = len(profiles)
-
-#         #remove profile
-#         for p in profiles:
-#             if p['name'] == name:
-#                 profiles.pop(p['id'] - 1)
-        
-#         #print error message if profile does not exist
-#         totalProfilesUpdated = len(profiles)
-#         if totalProfiles == totalProfilesUpdated:
-#             print("profile " + name + " does not exist")
-#             return
-
-#         #update profiles.json
-#         out_file = open("profiles.json", "w")
-#         json.dump(profiles, out_file, indent = 6)
-#         out_file.close()
-
-#     except:
-#         print("error something went wrong removing profile")
-        
-
 def fetch_news_feed(name, self):
     #fetch all saved profiles from profiles.json if exists
     file = open('profiles.json', "r")
@@ -453,23 +397,15 @@ def refreshScreen(self, screenName):
 def openNewsInWebBrowser(self, searchString):
     webbrowser.open_new('http://duckduckgo.com/?q=' + searchString)
 
-### tests ###
-
 ### kivy ###
 kivy.require('2.0.0')
-
-#settings
 Config.set('graphics', 'resizable', 0)
 #Config.set('graphics', 'width', '200')
 #Config.set('graphics', 'height', '200')
 
-#classes
 class StartingScreen(Screen):
     def __init__(self, **var_args):
         super(StartingScreen, self).__init__(**var_args) # that has been overwritten in a class object. to inherited methods from a parent or sibling class super function can be used to gain access
-    
-    def clear_news(self):
-        self.ids.boxLayoutPost.clear_widgets()
 
     def on_pre_enter(self, *args):
         print("StartingScreen")
@@ -793,6 +729,9 @@ class StartingScreen(Screen):
 
         return bl
 
+    def clear_news(self):
+        self.ids.boxLayoutPost.clear_widgets()
+        
     def showMenu(self):
         #create title card
         titleCardAdd = StartingScreen.createTitleCard(self, 'Add', 'add')
@@ -1026,6 +965,5 @@ class scraperNewsApp(App): #the Base Class of our Kivy App
         # sm.current = 'edit'
         return sm
 
-#run kivy app
 if __name__ == '__main__':
     scraperNewsApp().run()
