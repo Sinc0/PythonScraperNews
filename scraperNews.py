@@ -54,8 +54,8 @@ def fetch_youtube_channel(url, self, name):
         # print(requestResultText)
 
         #create text file
-        with open('test.txt', 'w') as f:
-            f.write(str(requestResultText))
+        # with open('test.txt', 'w') as f:
+        #     f.write(str(requestResultText))
 
         #regex youtube channel title
         formatChannelTitle1 = re.findall(r'<title>.*YouTube</title>', str(requestResultText))
@@ -159,15 +159,15 @@ def year_progress():
     JAN = 31
     FEB = 31 + 28
     MAR = 31 + 28 + 31
-    APR = 31 + 28 + 31+ 30
-    MAY = 31 + 28 + 31+ 30 + 31
-    JUN = 31 + 28 + 31+ 30 + 31 + 30
-    JUL = 31 + 28 + 31+ 30 + 31 + 30 + 31
+    APR = 31 + 28 + 31 + 30
+    MAY = 31 + 28 + 31 + 30 + 31
+    JUN = 31 + 28 + 31 + 30 + 31 + 30
+    JUL = 31 + 28 + 31 + 30 + 31 + 30 + 31
     AUG = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31
-    SEP = 31 + 28 + 31+ 30 + 31 + 30 + 31 + 31 + 30
-    OCT = 31 + 28 + 31+ 30 + 31 + 30 + 31 + 31 + 30 + 31
-    NOV = 31 + 28 + 31+ 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30
-    DEC = 31 + 28 + 31+ 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31
+    SEP = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30
+    OCT = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31
+    NOV = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30
+    DEC = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31
     year = datetime.datetime.now().year
     totalDaysThisYear = 365
     month = datetime.datetime.now().month
@@ -179,40 +179,40 @@ def year_progress():
     
     #check month name
     if month == 1: 
-        dayOfTheYear = JAN + day
+        dayOfTheYear = day
         month = "Jan"
     if month == 2: 
-        dayOfTheYear = FEB + day
+        dayOfTheYear = JAN + day
         month = "Feb"
     if month == 3:
-        dayOfTheYear = MAR + day 
+        dayOfTheYear = FEB + day 
         month = "Mar"
     if month == 4:
-        dayOfTheYear = APR + day
+        dayOfTheYear = MAR + day
         month = "Apr"
     if month == 5:
-        dayOfTheYear = MAY + day
+        dayOfTheYear = APR + day
         month = "May"
     if month == 6:
-        dayOfTheYear = JUN + day
+        dayOfTheYear = MAY + day
         month = "Jun"
     if month == 7:
-        dayOfTheYear = JUL + day
+        dayOfTheYear = JUN + day
         month = "Jul"
     if month == 8:
-        dayOfTheYear = AUG + day
+        dayOfTheYear = JUL + day
         month = "Aug"
     if month == 9:
-        dayOfTheYear = SEP + day
+        dayOfTheYear = AUG + day
         month = "Sep"
     if month == 10:
-        dayOfTheYear = OCT + day
+        dayOfTheYear = SEP + day
         month = "Oct"
     if month == 11:
-        dayOfTheYear = NOV + day 
+        dayOfTheYear = OCT + day 
         month = "Nov"
     if month == 12:
-        dayOfTheYear = DEC + day 
+        dayOfTheYear = NOV + day 
         month = "Dec"
             
     #check percentage of year

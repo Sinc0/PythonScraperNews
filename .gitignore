@@ -9,6 +9,7 @@ test.txt
 tests.txt
 regex.txt
 requests.txt
+testScrapeTwitter.txt
 profiles.json
 favorites.json
 testKivy1.py
@@ -17,6 +18,6 @@ testKivy2.kv
 testKivyScraperNews.py
 testKivyScraperNews.kv
 testScrapeTwitter.py
-testScrapeTwitter.txt
 testOU.py
 thumbnails
+scraperNews.spec
