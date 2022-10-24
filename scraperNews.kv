@@ -1,4 +1,4 @@
-#:kivy 2.0.0
+#:kivy 2.1.0
 
 <StartingScreen>:
     bl1: testBoxLayout
@@ -34,6 +34,135 @@
                 height: self.minimum_height
                 spacing: 10
                 padding: 10
+                
+                BoxLayout:
+                    id: boxLayoutNewsCard1
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    width: 600
+                    spacing: -2
+                    padding: 0
+                    opacity: 0
+
+                    Button:
+                        id: newsCard1Post
+                        size_hint_y: None
+                        size_hint_x: None
+                        text: ""
+                        padding: 10, 10 #left, top
+                        text_size: 600, 100
+                        height: 100
+                        width: 600
+                        multiline: True
+                        disabled: False
+                        halign:'left'
+                        valign: 'top'
+                        color: 'white'
+                        background_color: 'darkgray'
+                        opacity: 1
+                        font_size: 16
+
+                    Button:
+                        id: newsCard1GreenBtn
+                        size_hint_y: None
+                        size_hint_x: None
+                        height: 100
+                        width: 80
+                        text: "+"
+                        background_color: "green"
+                        disabled: True
+                        opacity: 1
+                        on_press: root.saveToFavorites(self, newsCard1Post.text)
+                        valign: 'top'
+                        color: "white"
+                        font_size: 24
+                        
+                BoxLayout:
+                    id: boxLayoutNewsCard2
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    width: 600
+                    spacing: -2
+                    padding: 0
+                    opacity: 0
+
+                    Button:
+                        id: newsCard2Post
+                        size_hint_y: None
+                        size_hint_x: None
+                        text: ""
+                        padding: 10, 10 #left, top
+                        text_size: 600, 100
+                        height: 100
+                        width: 600
+                        multiline: True
+                        disabled: False
+                        halign:'left'
+                        valign: 'top'
+                        color: 'white'
+                        background_color: 'darkgray'
+                        opacity: 1
+                        font_size: 16
+
+                    Button:
+                        id: newsCard2GreenBtn
+                        size_hint_y: None
+                        size_hint_x: None
+                        height: 100
+                        width: 80
+                        text: "+"
+                        background_color: "green"
+                        disabled: True
+                        opacity: 1
+                        on_press: root.saveToFavorites(self, newsCard2Post.text)
+                        valign: 'top'
+                        color: "white"
+                        font_size: 24
+
+                BoxLayout:
+                    id: boxLayoutNewsCard3
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    width: 600
+                    spacing: -2
+                    padding: 0
+                    opacity: 0
+
+                    Button:
+                        id: newsCard3Post
+                        size_hint_y: None
+                        size_hint_x: None
+                        text: ""
+                        padding: 10, 10 #left, top
+                        text_size: 600, 100
+                        height: 100
+                        width: 600
+                        multiline: True
+                        disabled: False
+                        halign:'left'
+                        valign: 'top'
+                        color: 'white'
+                        background_color: 'darkgray'
+                        opacity: 1
+                        font_size: 16
+
+                    Button:
+                        id: newsCard3GreenBtn
+                        size_hint_y: None
+                        size_hint_x: None
+                        height: 100
+                        width: 80
+                        text: "+"
+                        background_color: "green"
+                        disabled: True
+                        opacity: 1
+                        on_press: root.saveToFavorites(self, newsCard3Post.text)
+                        valign: 'top'
+                        color: "white"
+                        font_size: 24
 
 <AddProfileScreen>:
     bl2: testBoxLayout
@@ -62,30 +191,35 @@
                     size_hint_y: None
                     text: "<"
                     on_press: root.manager.current = 'start'
-                    font_size: 30
+                    font_size: 40
                     disabled: False
+                    background_color: "black"
 
         StackLayout:
             id: testStackLayout1
             size_hint_y: 1
+            size_hint_x: 1
+            
             Label:
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
-                text: "Add Profile"
+                text: "Custom Profile"
             TextInput:
                 id: profileName
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
+                # width: 700
                 font_size: 20
-                hint_text: "name"
+                hint_text: "profile name"
                 halign: "center"
             TextInput:
                 id: profileYoutube
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
+                # width: 700
                 font_size: 20
                 hint_text: "youtube channel"
                 halign: "center"
@@ -94,16 +228,54 @@
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
+                # width: 700
                 font_size: 20
                 hint_text: "twitter username"
                 halign: "center"
+            # TextInput:
+            #     id: profileFillter
+            #     size_hint_y: None
+            #     size_hint_x: None
+                # height: 40
+                # width: 700
+                # disabled: True
             Button:
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
-                text: "Confirm Add"
+                # width: 700
+                text: "Add"
                 background_color: 'lightgreen'
                 on_press: root.fetch_profile_inputs()
+            Label:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                text: "Newssites"
+            Button:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                # width: 700
+                text: "Add Newssite #1"
+                background_color: 'lightgreen'
+                on_press: 
+            Button:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                # width: 700
+                text: "Add Newssite #2"
+                background_color: 'lightgreen'
+                on_press: 
+            Button:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                # width: 700
+                text: "Add Newssite #3"
+                background_color: 'lightgreen'
+                on_press: 
 
 <EditProfileScreen>:
     bl2: testBoxLayout
@@ -133,33 +305,35 @@
                     size_hint_y: None
                     text: "<"
                     on_press: root.manager.current = 'start'
-                    font_size: 30
+                    font_size: 40
                     disabled: False
+                    background_color: "black"
 
         StackLayout:
             id: testStackLayout1
             size_hint_y: 1
+            size_hint_x: 1
 
-            Label:
-                size_hint_y: None
-                size_hint_x: 1
-                height: 40
-                text: "Delete Profile"
+            # Label:
+            #     size_hint_y: None
+            #     size_hint_x: 1
+            #     height: 40
+            #     text: "Delete Profile"
             TextInput:
                 id: profileName
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
                 font_size: 20
-                hint_text: "name"
+                hint_text: "Select Profile"
                 halign: "center"
                 disabled: True
 
-            Label:
-                size_hint_y: None
-                size_hint_x: 1
-                height: 40
-                text: "All Profiles"
+            # Label:
+            #     size_hint_y: None
+            #     size_hint_x: 1
+            #     height: 40
+            #     text: "All Profiles"
 
             ScrollView:
                 id: svScrollBar2
@@ -168,7 +342,7 @@
                 effect_cls: 'ScrollEffect'
                 size_hint_y: None
                 size_hint_x: 1
-                height: 440
+                height: 440 + 80
 
                 BoxLayout:
                     id: testBoxLayout2
@@ -181,7 +355,7 @@
                 size_hint_x: 1
                 height: 40
                 background_color: 'red'
-                text: "Confirm Delete"
+                text: "Remove"
                 on_press: root.DeleteProfile()
 
 <FavoritesScreen>:
@@ -208,8 +382,9 @@
                     size_hint_y: None
                     text: "<"
                     on_press: root.manager.current = 'start'
-                    font_size: 30
+                    font_size: 40
                     disabled: False
+                    background_color: "black"
         
         ScrollView:
             id: svScrollBar

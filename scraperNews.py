@@ -16,13 +16,53 @@ import kivy
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
 from kivy.config import Config
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.screenmanager import NoTransition
 from kivy.uix.boxlayout import BoxLayout
 from kivy.utils import get_color_from_hex
+from kivy.lang import Builder
+from functools import partial
+
+#load kv file
+Builder.load_file("scraperNews.kv")
+# Builder.load_string("""""")
 
 ### functions ###
+def addKivyWidgetTest(self, obj):
+    self.ids.boxLayoutPost.add_widget(obj)
+
+def changeKivyWidgetTest(self, id, buttonId, profileName, newsType, newsText):
+    if id == 1: 
+        self.ids.newsCard1GreenBtn.disabled = False
+        self.ids.boxLayoutNewsCard1.opacity = 1
+        # Thread(target=download_progress, kwargs={'self': self, 'container': True, 'directory': playlistDir}).start()
+    elif id == 2: 
+        self.ids.newsCard2GreenBtn.disabled = False
+        self.ids.boxLayoutNewsCard2.opacity = 1
+    elif id == 3: 
+        self.ids.newsCard3GreenBtn.disabled = False
+        self.ids.boxLayoutNewsCard3.opacity = 1
+    # self.ids.newsCard1Post.disabled = True
+    # self.ids.newsCard1GreenBtn.disabled = True
+    # self.ids.newsCard1Post.background_color = "red"
+
+def resetKivyWidgetTest(self, id):
+    if id == 1: 
+        # press1 = lambda*_: print('First press')
+        # press2 = lambda*_: print('Second press')
+        # self.ids.newsCard1GreenBtn.bind(on_press=press1)
+        # self.ids.newsCard1GreenBtn.unbind(on_press=press1)
+        # self.ids.newsCard1GreenBtn.bind(on_press=press2)
+        self.ids.boxLayoutNewsCard1.opacity = 0
+    elif id == 2: self.ids.boxLayoutNewsCard2.opacity = 0
+    elif id == 3: self.ids.boxLayoutNewsCard3.opacity = 0
+    # self.ids.newsCard1Post.opacity = 0
+    # self.ids.newsCard1Post.disabled = True
+    # self.ids.newsCard1GreenBtn.disabled = True
+    # self.ids.newsCard1Post.background_color = "red"
+                    
 def fetch_youtube_channel(url, self, name):
     #null check
     if url == "":
@@ -66,52 +106,66 @@ def fetch_youtube_channel(url, self, name):
     else:
         print("youtube channel fetch failed")
 
-    try:
-        #regex youtube video data
-        requestResultText = str(requestResultText).replace("\\u0026", "&")
-        # regexYoutubeVideos = re.findall(r'"title":{"runs":\[{"text":"[^.]*"}],"[^.]*"publishedTimeText":{"simpleText":[^.]*ago"', requestResultText)
-        regexYoutubeVideos = re.findall(r'"title":{"runs":\[{"text":"[\w*\s*\d*,*-*!*"*_*\/*:*\\*}*{*\]\'*\.\\*\-*\#*\|*\(*\)*&*+*]*ago"', requestResultText)
+    # try:
+    #regex youtube video data
+    requestResultText = str(requestResultText).replace("\\u0026", "&")
+    # regexYoutubeVideos = re.findall(r'"title":{"runs":\[{"text":"[^.]*"}],"[^.]*"publishedTimeText":{"simpleText":[^.]*ago"', requestResultText)
+    regexYoutubeVideos = re.findall(r'"title":{"runs":\[{"text":"[\w*\s*\d*,*-*!*"*_*\/*:*\\*}*{*\]\'*\.\\*\-*\#*\|*\(*\)*&*+*]*ago"', requestResultText)
 
-        for videoTitle in regexYoutubeVideos[:numberOfVideosLimit]:
-            youtubeVideoCounter += 1
+    for videoTitle in regexYoutubeVideos[:numberOfVideosLimit]:
+        youtubeVideoCounter += 1
 
-            #format youtube video upload date
-            formatFindUploadDate = re.findall(r':"[\d]*\s[^.]*ago"', videoTitle)
-            if formatFindUploadDate == []:
-                formatFindUploadDate = re.findall(r':"Streamed\s[\d]*\s[^.]*ago"', videoTitle)
-                formatFindUploadDate = str(formatFindUploadDate).replace("Streamed ", "")
-                formatFindUploadDate = str(formatFindUploadDate).lower()
-            formatUploadDateStep1 = str(formatFindUploadDate)[4:]
-            formatUploadDateStep2 = str(formatUploadDateStep1)[:(len(formatUploadDateStep1) - 3)]
-            formatedUploadDate = formatUploadDateStep2
+        #format youtube video upload date
+        formatFindUploadDate = re.findall(r':"[\d]*\s[^.]*ago"', videoTitle)
+        if formatFindUploadDate == []:
+            formatFindUploadDate = re.findall(r':"Streamed\s[\d]*\s[^.]*ago"', videoTitle)
+            formatFindUploadDate = str(formatFindUploadDate).replace("Streamed ", "")
+            formatFindUploadDate = str(formatFindUploadDate).lower()
+        formatUploadDateStep1 = str(formatFindUploadDate)[4:]
+        formatUploadDateStep2 = str(formatUploadDateStep1)[:(len(formatUploadDateStep1) - 3)]
+        formatedUploadDate = formatUploadDateStep2
 
-            #format youtube video title
-            formatFindTitle = re.findall(r'"text":"[^.]*"}],"', videoTitle)
-            formatTitleStep1 = str(formatFindTitle)[10:]
-            formatTitleStep2 = str(formatTitleStep1)[:(len(formatTitleStep1) - 7)]
-            formatTitleStep3 = str(formatTitleStep2).replace("\\\\\"", "\"")
-            formatTitleStep4 = str(formatTitleStep3).replace("\\'", "'")
-            formatTitleStep5 = str(formatTitleStep4).replace("   ", " ")
-            formatTitleStep6 = str(formatTitleStep5).replace("  ", " ")
-            formatedTitle = formatTitleStep6
+        #format youtube video title
+        formatFindTitle = re.findall(r'"text":"[^.]*"}],"', videoTitle)
+        formatTitleStep1 = str(formatFindTitle)[10:]
+        formatTitleStep2 = str(formatTitleStep1)[:(len(formatTitleStep1) - 7)]
+        formatTitleStep3 = str(formatTitleStep2).replace("\\\\\"", "\"")
+        formatTitleStep4 = str(formatTitleStep3).replace("\\'", "'")
+        formatTitleStep5 = str(formatTitleStep4).replace("   ", " ")
+        formatTitleStep6 = str(formatTitleStep5).replace("  ", " ")
+        formatedTitle = formatTitleStep6
 
-            #print youtube data to console
-            if youtubeVideoCounter <= numberOfVideosLimit:
-                # print(" " + str(youtubeVideoCounter) + ". " + str(formatedTitle) + " - " + str(formatedUploadDate))
-                # print("#" + str(youtubeVideoCounter) + " - " + "youtube" + " - " + str(formatedUploadDate) + " - " + str(formatedTitle))
-                # self.ids.svLabel.text += "\n" + "youtube" + " - " + str(formatedUploadDate) + ": " + str(formatedTitle) + "\n"
-                # self.ids.svScrollBar.scroll_y = 0
-                
-                #create news card
-                time.sleep(0.1)
-                print(" " + "youtube" + " - " + str(formatedUploadDate) + " - " + str(formatedTitle))
-                cardText = "Youtube" + " - " + str(formatedUploadDate) + "\n" + str(formatedTitle)
-                bl = StartingScreen.createNewsCard(self, cardText, 'youtube', name)
-                self.ids.boxLayoutPost.add_widget(bl)
-            # else:
-            #     print(str(youtubeVideoCounter) + ". " + str(formatedTitle) + " - " + str(formatedUploadDate))
-    except:
-        print("youtube channel does not exist")
+        #print youtube data to console
+        if youtubeVideoCounter <= numberOfVideosLimit:
+            # print(" " + str(youtubeVideoCounter) + ". " + str(formatedTitle) + " - " + str(formatedUploadDate))
+            # print("#" + str(youtubeVideoCounter) + " - " + "youtube" + " - " + str(formatedUploadDate) + " - " + str(formatedTitle))
+            # self.ids.svLabel.text += "\n" + "youtube" + " - " + str(formatedUploadDate) + ": " + str(formatedTitle) + "\n"
+            # self.ids.svScrollBar.scroll_y = 0
+            
+            #create news card
+            time.sleep(0.1)
+            print(" " + "youtube" + " - " + str(formatedUploadDate) + " - " + str(formatedTitle))
+            cardText = name + " · Youtube · " + str(formatedUploadDate) + " · " + "\n" + str(formatedTitle) + "\n"
+            # cardText = "Youtube" + " - " + str(formatedUploadDate) + "\n" + str(formatedTitle)
+            # bl = StartingScreen.createNewsCard(self, cardText, 'youtube', name)
+            # self.ids.testLabelX.text += " " + "youtube" + " - " + str(formatedUploadDate) + " - " + str(formatedTitle) + "\n"
+            # boxLayoutPost.ids.btnTestY.text = " " + "youtube" + " - " + str(formatedUploadDate) + " - " + str(formatedTitle)
+            # boxlayoutTestY.ids.btnTestY.text = "test"
+        
+            if(youtubeVideoCounter == 1):
+                self.ids.newsCard1Post.text = cardText
+                Thread(target=lambda : changeKivyWidgetTest(self, 1, 101, cardText, 'youtube', name)).start()
+            elif(youtubeVideoCounter == 2):
+                self.ids.newsCard2Post.text = cardText
+                Thread(target=lambda : changeKivyWidgetTest(self, 2, 102, cardText, 'youtube', name)).start()
+            elif(youtubeVideoCounter == 3):
+                self.ids.newsCard3Post.text = cardText
+                Thread(target=lambda : changeKivyWidgetTest(self, 3, 103, cardText, 'youtube', name)).start()
+            
+        # else:
+        #     print(str(youtubeVideoCounter) + ". " + str(formatedTitle) + " - " + str(formatedUploadDate))
+    # except:
+        # print("youtube channel does not exist")
 
 def fetch_twitter_profile(username, self, name):
     #null check
@@ -284,11 +338,19 @@ def fetch_news_feed(name, self):
     totalProfiles = len(profiles)
 
     #clear all news card widgets
-    self.ids.boxLayoutPost.clear_widgets()
+    # self.ids.boxLayoutPost.clear_widgets()
 
     #create title card
-    bl = StartingScreen.createTitleCard(self, name)
-    self.ids.boxLayoutPost.add_widget(bl)
+    # bl = StartingScreen.createTitleCard(self, name)
+    # self.ids.boxLayoutPost.add_widget(bl)
+
+    #reset news cards
+    self.ids.newsCard1Post.text = ""
+    self.ids.newsCard2Post.text = ""
+    self.ids.newsCard3Post.text = ""
+    Thread(target=lambda : resetKivyWidgetTest(self, 1)).start()
+    Thread(target=lambda : resetKivyWidgetTest(self, 2)).start()
+    Thread(target=lambda : resetKivyWidgetTest(self, 3)).start()
 
     #fetch profile data
     for p in profiles:
@@ -299,7 +361,7 @@ def fetch_news_feed(name, self):
             # self.ids.svScrollBar.scroll_y = 0
             
             fetch_youtube_channel(p['youtube'], self, name)
-            fetch_twitter_profile(p['twitter'], self, name)
+            # fetch_twitter_profile(p['twitter'], self, name)
 
     print("")
 
@@ -398,8 +460,8 @@ def openNewsInWebBrowser(self, searchString):
     webbrowser.open_new('http://duckduckgo.com/?q=' + searchString)
 
 ### kivy ###
-kivy.require('2.0.0')
-Config.set('graphics', 'resizable', 0)
+kivy.require('2.1.0')
+# Config.set('graphics', 'resizable', 0)
 #Config.set('graphics', 'width', '200')
 #Config.set('graphics', 'height', '200')
 
@@ -422,29 +484,52 @@ class StartingScreen(Screen):
         self.bl1.clear_widgets()
 
         #create home button
-        btnClear = Button(text = "Clear", size_hint_y = None, height = btnHeight, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = btnFontSize)
-        btnClear.bind(on_press=lambda *args: StartingScreen.clear_news(self))
+        # btnClear = Button(text = "Clear", size_hint_y = None, height = btnHeight, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = btnFontSize)
+        # btnClear.bind(on_press=lambda *args: StartingScreen.clear_news(self))
 
         #create add button
-        btnAdd = Button(text = "+", size_hint_y = None, height = btnHeight, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = 30)
+        btnAdd = Button(
+            text = "+", 
+            size_hint_y = None, 
+            height = btnHeight, 
+            background_color = btnBackgroundColor, 
+            background_normal = 'transparent', 
+            background_down = 'transparent', font_size = 30
+        )
         btnAdd.bind(on_press=lambda *args: changeScreenToAdd(self))
         
         #create edit button
-        btnEdit = Button(text = "-", size_hint_y = None, height = btnHeight, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = 49)
+        btnEdit = Button(
+            text = "-", 
+            size_hint_y = None, 
+            height = btnHeight, 
+            background_color = btnBackgroundColor, 
+            background_normal = 'transparent', 
+            background_down = 'transparent', 
+            font_size = 49
+        )
         btnEdit.bind(on_press=lambda *args: changeScreenToEdit(self))
         
         #create favorite button
-        btnFavorites = Button(text = "Saved", size_hint_y = None, height = btnHeight, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = btnFontSize)
+        btnFavorites = Button(
+            text = "Saved", 
+            size_hint_y = None, 
+            height = btnHeight, 
+            background_color = btnBackgroundColor, 
+            background_normal = 'transparent', 
+            background_down = 'transparent', 
+            font_size = btnFontSize
+        )
         btnFavorites.bind(on_press=lambda *args: changeScreenToFavorites(self))
 
         #create filler button
         btnFiller = Button(text = "", size_hint_y = None, height = btnHeight, background_color = btnBackgroundColor, background_normal = 'transparent', background_down = 'transparent', font_size = btnFontSize)
 
         #add create and edit buttons
+        self.bl1.add_widget(btnFavorites)
         self.bl1.add_widget(btnAdd)
         self.bl1.add_widget(btnEdit)
-        self.bl1.add_widget(btnClear)
-        self.bl1.add_widget(btnFavorites)
+        # self.bl1.add_widget(btnClear)
 
         #add saved profile buttons
         for p in savedProfiles[::-1]:
@@ -454,7 +539,13 @@ class StartingScreen(Screen):
         #test remove widgets
         # totalChildrens = len(self.bl1.children)
         # self.bl1.remove_widget(self.bl1.children[totalChildrens - 1])
-        # self.bl1.remove_widget(self.bl1.children[totalChildrens - 2])        
+        # self.bl1.remove_widget(self.bl1.children[totalChildrens - 2])
+
+        # StartingScreen.clear_news(self)
+        # for x in range(6):
+        # bl = StartingScreen.createNewsCard(self, "text", 'youtube', "profile", "savedAt")
+        # self.ids.boxLayoutPost.add_widget(bl)
+            # print(bl)
 
     def printNewsFeed(self, profile, selfObj):
         #prints
@@ -514,74 +605,146 @@ class StartingScreen(Screen):
             #add button
             self.bl2.add_widget(newButton)
 
-    def saveToFavorites(self, cardId, profile, platform, cardText):
+    def saveToFavorites(screen, self, text):
+        #fetch all saved favorites from favorites.json if exists
+        file = open('favorites.json', "r")
+        favorites = json.load(file)
+        totalFavorites = len(favorites)
+        # print("total favorites: " + str(totalFavorites))
+        # print(favorites)
+
+        #format text to id
+        btnIdFormatting1 = text.replace(" ", "")
+        btnIdFormatting2 = btnIdFormatting1.replace("_", "")
+        btnIdFormatting3 = btnIdFormatting2.replace("-", "")
+        btnIdFormatting4 = btnIdFormatting3.replace("\n", "")
+        btnIdFormatting5 = btnIdFormatting4.replace("·", "")
+        btnIdFormatting6 = btnIdFormatting5.replace("u00b7", "")
+        btnIdFormatted = str(btnIdFormatting6[0:60])
+
+        #save new favorite
+        # "id": str(cardId),
+        # "profile": profile, 
+        # "platform": platform, 
+        # "savedAt": str(datetime.datetime.now()), 
+        # "text": cardText
+        id = btnIdFormatted
+        profile = text.split(" · ")[0]
+        platform = text.split(" · ")[1]
+        savedAt = str(datetime.datetime.now())
+        postedAt = text.split(" · ")[2]
+        text = text.split(" · ")[3].replace("\n", "")
+        newFavorite = {
+            "id": id,
+            "profile": profile, 
+            "platform": platform, 
+            "savedAt": savedAt, 
+            "text": postedAt + " · " + text,
+            "img": "/" + profile + ".jpg"
+            
+        }
+        
+        #check if already saved
+        for f in favorites:
+            if f['id'] == id:
+                print('news card already saved')
+                return
+        
+        #add new favorite
+        favorites.append(newFavorite)
+        out_file = open("favorites.json", "w")
+        json.dump(favorites, out_file, indent = 6)
+        out_file.close()
+        return
+
         #find boxlayout widget
-        for c in self.ids.boxLayoutPost.children:
-            #find button widget
-            for s in c.children:
-                try:
-                    if s.id == cardId:
-                        if s.text == '+':
-                            #change button style
-                            s.background_color = "darkred"
-                            s.background_normal = "darkred"
-                            s.text = '-'
+        # for c in self.ids.boxLayoutPost.children:
+        #     #find button widget
+        #     for s in c.children:
+        #         try:
+        #             if s.id == cardId:
+        #                 if s.text == '+':
+        #                     #change button style
+        #                     s.background_color = "darkred"
+        #                     s.background_normal = "darkred"
+        #                     s.text = '-'
 
-                            #fetch all saved favorites from favorites.json if exists
-                            file = open('favorites.json', "r")
-                            favorites = json.load(file)
-                            totalFavorites = len(favorites)
-                            # print("total favorites: " + str(totalFavorites))
-                            # print(favorites)
+        #                     #fetch all saved favorites from favorites.json if exists
+        #                     file = open('favorites.json', "r")
+        #                     favorites = json.load(file)
+        #                     totalFavorites = len(favorites)
+        #                     # print("total favorites: " + str(totalFavorites))
+        #                     # print(favorites)
 
-                            #save new favorite
-                            newFavorite = {
-                                "id": str(cardId),
-                                "profile": profile, 
-                                "platform": platform, 
-                                "savedAt": str(datetime.datetime.now()), 
-                                "text": cardText
-                            }
+        #                     #save new favorite
+        #                     newFavorite = {
+        #                         "id": str(cardId),
+        #                         "profile": profile, 
+        #                         "platform": platform, 
+        #                         "savedAt": str(datetime.datetime.now()), 
+        #                         "text": cardText
+        #                     }
                             
-                            #check if already saved
-                            for f in favorites:
-                                if f['id'] == cardId:
-                                    print('news card already saved')
-                                    return
+        #                     #check if already saved
+        #                     for f in favorites:
+        #                         if f['id'] == cardId:
+        #                             print('news card already saved')
+        #                             return
                             
-                            #add new favorite
-                            favorites.append(newFavorite)
-                            out_file = open("favorites.json", "w")
-                            json.dump(favorites, out_file, indent = 6)
-                            out_file.close()
+        #                     #add new favorite
+        #                     favorites.append(newFavorite)
+        #                     out_file = open("favorites.json", "w")
+        #                     json.dump(favorites, out_file, indent = 6)
+        #                     out_file.close()
 
-                        elif s.text == '-':
-                            #change button style
-                            s.text = '+'
-                            s.background_color = "green"
-                            s.background_normal = "green"
+        #                 elif s.text == '-':
+        #                     #change button style
+        #                     s.text = '+'
+        #                     s.background_color = "green"
+        #                     s.background_normal = "green"
                             
-                            #fetch all saved favorites from favorites.json if exists
-                            file = open('favorites.json', "r")
-                            favorites = json.load(file)
-                            totalFavorites = len(favorites)
-                            # print("total favorites: " + str(totalFavorites))
+        #                     #fetch all saved favorites from favorites.json if exists
+        #                     file = open('favorites.json', "r")
+        #                     favorites = json.load(file)
+        #                     totalFavorites = len(favorites)
+        #                     # print("total favorites: " + str(totalFavorites))
                             
-                            #remove selected favorite
-                            count = 0
-                            for f in favorites:
-                                if f['id'] == cardId:
-                                    favorites.pop(count)
-                                    out_file = open("favorites.json", "w")
-                                    json.dump(favorites, out_file, indent = 6)
-                                    out_file.close()
-                                count += 1
+        #                     #remove selected favorite
+        #                     count = 0
+        #                     for f in favorites:
+        #                         if f['id'] == cardId:
+        #                             favorites.pop(count)
+        #                             out_file = open("favorites.json", "w")
+        #                             json.dump(favorites, out_file, indent = 6)
+        #                             out_file.close()
+        #                         count += 1
 
-                            #refresh favorites
-                            if 'favorites' in str(self):
-                                refreshScreen(self, 'favorites')
-                except:
-                    None
+        #                     #refresh favorites
+        #                     if 'favorites' in str(self):
+        #                         refreshScreen(self, 'favorites')
+        #         except:
+        #             None
+
+    def removeFromFavorites(self, cardId):
+        #fetch all saved favorites from favorites.json if exists
+        file = open('favorites.json', "r")
+        favorites = json.load(file)
+        totalFavorites = len(favorites)
+        # print("total favorites: " + str(totalFavorites))
+        
+        #remove selected favorite
+        count = 0
+        for f in favorites:
+            if f['id'] == cardId:
+                favorites.pop(count)
+                out_file = open("favorites.json", "w")
+                json.dump(favorites, out_file, indent = 6)
+                out_file.close()
+            count += 1
+
+        #refresh favorites
+        if 'favorites' in str(self):
+            refreshScreen(self, 'favorites')
 
     def createNewsCard(self, *args):
         #handle args
@@ -595,8 +758,8 @@ class StartingScreen(Screen):
         text = text.replace("\\", "")
 
         #variables
-        baseHeight = 120
-        baseWidth = 660
+        baseHeight = 160
+        baseWidth = 600
 
         #calculate card text height
         tempTextLength = len(text)
@@ -619,49 +782,94 @@ class StartingScreen(Screen):
         totalWidth = baseWidth
 
         #boxlayout
-        bl = BoxLayout(orientation = "horizontal", size_hint_x = 1, size_hint_y = None)
-        bl.height = totalHeight - 40
-        bl.width = 660
+        bl = BoxLayout(orientation = "horizontal", size_hint_x = None, size_hint_y = None)
+        # bl.height = totalHeight - 40
+        bl.height = 100
+        # bl.width = 660
+        bl.width = 600
         bl.spacing = -2
         bl.padding = 0
+        bl.id = "boxlayoutTestY"
 
         #fetch all saved favorites from favorites.json if exists
         file = open('favorites.json', "r")
         favorites = json.load(file)
         # totalFavorites = len(favorites)
-        
 
         #format text to id
-        btnIdFormatting1 = text.replace(" ", "")
+        btnId = profile + newsType + text
+        btnIdFormatting1 = btnId.replace(" ", "")
         btnIdFormatting2 = btnIdFormatting1.replace("_", "")
         btnIdFormatting3 = btnIdFormatting2.replace("-", "")
         btnIdFormatting4 = btnIdFormatting3.replace("\n", "")
-        btnIdFormatted = str(btnIdFormatting4[0:60])
+        btnIdFormatting5 = btnIdFormatting4.replace("·", "")
+        btnIdFormatting6 = btnIdFormatting5.replace("u00b7", "")
+        btnIdFormatted = str(btnIdFormatting6[0:60])
+        
+        btnProfileImg = Button(
+            size_hint_x = None, 
+            size_hint_y = None, 
+            height = 100, 
+            width = 100, 
+            background_normal =  os.getcwd() + "/thumbnails/" + profile.lower() + ".jpg"
+        )
         
         #check if id is already in favorites
         try:
             if btnIdFormatted in str(favorites):
                 #create remove button
-                btn = Button(text = "-", size_hint_x = 0.1, size_hint_y = 1, background_color = 'darkred', background_normal = 'darkred', background_down = 'darkred')
+                btn = Button(
+                    text = "-", 
+                    size_hint_x = None, 
+                    size_hint_y = None,
+                    height = 100,
+                    width = 70, 
+                    background_color = 'darkred', 
+                    background_normal = 'darkred', 
+                    background_down = 'darkred',
+                    font_size = 24
+                )
             elif btnIdFormatted not in str(favorites):
                 #create save button
-                btn = Button(text = "+", size_hint_x = 0.1, size_hint_y = 1, background_color = 'green', background_normal = 'green', background_down = 'green')
+                btn = Button(
+                    text = "+", 
+                    size_hint_x = None, 
+                    size_hint_y = None,
+                    height = 100,
+                    width = 70, 
+                    background_color = 'green', 
+                    background_normal = 'green', 
+                    background_down = 'green',
+                    font_size = 24
+                )
         except:
             #create save button
-            btn = Button(text = "+", size_hint_x = 0.1, size_hint_y = 1, background_color = 'green', background_normal = 'green', background_down = 'green')
+            btn = Button(
+                text = "+", 
+                size_hint_x = 0.1, 
+                size_hint_y = 1, 
+                background_color = 'green', 
+                background_normal = 'green', 
+                background_down = 'green'
+            )
         
         #set additional save/remove button variables
         btn.id = btnIdFormatted
         btn.color = 'lightgray'
-        btn.bind(on_press=lambda *args: StartingScreen.saveToFavorites(self, btn.id, profile, newsType, text))
+        btn.bind(on_press=lambda *args: StartingScreen.removeFromFavorites(self, btn.id))
+
+        btnProfileImg.id = btnIdFormatted
+        btnProfileImg.color = 'lightgray'
 
         #news card text
-        b2 = Button(text = savedAt + text)
+        b2 = Button(text = savedAt + " · " + newsType + " · " + text.split(" · ")[0] + "\n" + text.split(" · ")[1])
         b2.size_hint_y = None
-        b2.size_hint_x = 1
-        b2.padding = (20, 40)
-        b2.text_size = (610, totalHeight)
-        b2.height = totalHeight - 40
+        b2.size_hint_x = None
+        b2.padding = (60, 40) #left, top
+        b2.text_size = (600, totalHeight)
+        # b2.height = totalHeight - 40
+        b2.height = 100
+        b2.width = 499
         b2.multiline = True
         b2.disabled = False
         b2.halign = 'left'
@@ -678,15 +886,18 @@ class StartingScreen(Screen):
         #     b2.background_color = get_color_from_hex("#e52d27")
         #     b2.background_normal = 'transparent'
         #     b2.background_down = 'transparent'
-        searchString = text.split("\n")[1]
-        b2.bind(on_press=lambda *args: openNewsInWebBrowser(self, searchString))
+        searchString = "searchString" # text.split("\n")[1]
+        # b2.bind(on_press=lambda *args: openNewsInWebBrowser(self, searchString))
+        # b2.id = "btnTestY"
 
         #add widgets to boxlayout
         # bl.add_widget(lbl)
+        bl.add_widget(btnProfileImg)
         bl.add_widget(b2)
         bl.add_widget(btn)
 
         return bl
+        # return b2
 
     def createTitleCard(self, *args):
         #handle args
@@ -757,9 +968,20 @@ class AddProfileScreen(Screen):
         totalSavedProfiles = len(savedProfiles)
         
         #fill side panel with buttons
-        for x in range(6):
-            StartingScreen.AddFillerButtons(self)
+        # for x in range(6):
+        #     StartingScreen.AddFillerButtons(self)
 
+
+        # for x in range(10):
+        #     ti = TextInput(
+        #         size_hint_y = None,
+        #         size_hint_x = None,
+        #         height = 40,
+        #         width = 700,
+        #         disabled = True
+        #     )
+        #     self.sl1.add_widget(ti)
+        
     def fetch_profile_inputs(self):
         #variables
         profileName = self.ti1.text
@@ -811,8 +1033,8 @@ class EditProfileScreen(Screen):
                 # print(savedProfiles[reverseListCount])
 
         #fill side panel with buttons
-        for x in range(6):
-            StartingScreen.AddFillerButtons(self)
+        # for x in range(6):
+        #     StartingScreen.AddFillerButtons(self)
 
     def AddProfileButtons(self, profile):
         #variables
@@ -906,19 +1128,19 @@ class FavoritesScreen(Screen):
 
         
         #fill side panel with buttons
-        for x in range(6):
-            StartingScreen.AddFillerButtons(self)
+        # for x in range(6):
+        #     StartingScreen.AddFillerButtons(self)
 
         #add title card
-        if totalButtons < totalFavorites or totalButtons == 0:
-            titleCard = StartingScreen.createTitleCard(self, 'Saved_News')
-            self.ids.boxLayoutPost.add_widget(titleCard)
+        # if totalButtons < totalFavorites or totalButtons == 0:
+        #     titleCard = StartingScreen.createTitleCard(self, 'Saved_News')
+        #     self.ids.boxLayoutPost.add_widget(titleCard)
         
         #add news cards
         for f in favorites[::-1]:
             if totalButtons < totalFavorites:
-                savedAt =  "Saved" + " " + str(f['savedAt'][:-16]).replace("-", "/") + " - " + f['profile'] + " | "
-                bl = StartingScreen.createNewsCard(self, f['text'], 'youtube', f['profile'], savedAt)
+                savedAt =  "saved " + str(f['savedAt'][:-16]) + "\n" + f['profile']
+                bl = StartingScreen.createNewsCard(self, f['text'], f['platform'], f['profile'], savedAt)
                 self.ids.boxLayoutPost.add_widget(bl)
 
 class BlankScreen(Screen):
@@ -936,7 +1158,8 @@ class scraperNewsApp(App): #the Base Class of our Kivy App
         thumbnails_exists = os.path.isdir('thumbnails')
 
         #set window title
-        self.title = "Scraper News " + str(year_progress())
+        # self.title = "Scraper News - " + str(year_progress())
+        self.title = "ScraperNews · " + str(year_progress())
 
         #create profiles.json if does not exists
         if profiles_exists == False:
