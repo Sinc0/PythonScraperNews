@@ -1,7 +1,6 @@
-### imports general ###
+######### imports ######
 import requests
 import re
-import twint
 import time
 import datetime
 import json
@@ -10,8 +9,8 @@ import time
 import requests
 import os
 import webbrowser
+import pyclip
 
-### imports kivy ###
 import kivy
 from kivy.app import App
 from kivy.uix.label import Label
@@ -21,41 +20,99 @@ from kivy.config import Config
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.screenmanager import NoTransition
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.stacklayout import StackLayout
 from kivy.utils import get_color_from_hex
 from kivy.lang import Builder
+from kivy.core.window import Window
+from kivy.graphics import Rectangle, Color
+from kivy.uix.image import Image, AsyncImage
+
 from functools import partial
+from bs4 import BeautifulSoup
 
-#load kv file
-Builder.load_file("scraperNews.kv")
-# Builder.load_string("""""")
+###### code ######
+Builder.load_file("scraperNews.kv") #load kv file
+# Builder.load_string("""""") #load string
+kivy.require('2.0.0')
 
-### functions ###
-def displayNewsCard(self, id, buttonId, profileName, newsType, newsText):
+#kivy window settings
+Config.set('graphics', 'resizable', '1') #changing this might break display resolution
+Config.set('graphics', 'fullscreen', '0') #changing this might break display resolution
+Config.write()
+Window.size = (1000, 700) #width, height
+
+#globals
+global counterSTP; counterSTP = -1 # saved twitter posts
+global counterSYP; counterSYP = -1 # saved youtube posts
+global counterTNS; counterTNS = 1 # total news card
+
+#variables
+savedTwitterPosts = []
+savedYoutubePosts = []
+
+def displayNewsCard(self, id, username, type, platform, profileData):
+    #debugging
+    # print(type)
+    # print(profileData)
+    # print(platform)
+    
+    #check card pos
     if id == 1: 
-        self.ids.newsCard1GreenBtn.disabled = False
-        self.ids.boxLayoutNewsCard1.opacity = 1
+        cardObj = self.ids.newsCard1Post; 
+        boxlayoutObj = self.ids.boxLayoutNewsCard1; 
+        cardObj.order = 1
     elif id == 2: 
-        self.ids.newsCard2GreenBtn.disabled = False
-        self.ids.boxLayoutNewsCard2.opacity = 1
+        cardObj = self.ids.newsCard2Post; 
+        boxlayoutObj = self.ids.boxLayoutNewsCard2; 
+        cardObj.order = 2
     elif id == 3: 
-        self.ids.newsCard3GreenBtn.disabled = False
-        self.ids.boxLayoutNewsCard3.opacity = 1
+        cardObj = self.ids.newsCard3Post; 
+        boxlayoutObj = self.ids.boxLayoutNewsCard3; 
+        cardObj.order = 3
+
+    #check platform
+    if platform == "twitter": 
+        cardObj.type = "twitter"
+        cardObj.text = "Twitter · No posts found for " + username #update text
+    elif platform == "youtube": 
+        cardObj.text = "Youtube · No posts found for " + username #update text
+        cardObj.type = "youtube"
+    
+    #check data
+    if profileData != "null" and platform == "twitter":
+        cardObj.text = "Twitter · Click arrows to start..."
+    elif profileData != "null" and platform == "youtube":
+        cardObj.text = "Youtube · Click arrows to start..."
+    
+    #display card    
+    boxlayoutObj.opacity = 1
+    cardObj.opacity = 1
+
 
 def undisplayNewsCard(self, id):
-    if id == 1: self.ids.boxLayoutNewsCard1.opacity = 0
-    elif id == 2: self.ids.boxLayoutNewsCard2.opacity = 0
-    elif id == 3: self.ids.boxLayoutNewsCard3.opacity = 0
-                    
+    if id == 1: 
+        self.ids.boxLayoutNewsCard1.opacity = 0
+    elif id == 2: 
+        self.ids.boxLayoutNewsCard2.opacity = 0
+    elif id == 3: 
+        self.ids.boxLayoutNewsCard3.opacity = 0
+
+
 def fetch_youtube_channel(url, self, name):
     #null check
     if url == "": print("youtube channel is null"); return
     elif 'http' not in url: print("youtube channel is null"); return
 
     #variables
+    global savedYoutubePosts
+    global counterSYP
+    global counterTNS
     requestHeaders = {'user-agent': 'my-app/0.0.1', 'Cookie':'CONSENT=YES+cb.20210418-17-p0.en+FX+917;PREF=hl=en'}
-    numberOfVideosLimit = 3
     channelTitle = ""
     youtubeVideoCounter = 0
+    savedYoutubePosts = []
+    counterSYP = -1
+    # numberOfVideosLimit = 3
 
     #make request
     httpRequest = requests.get(url, headers=requestHeaders)
@@ -70,120 +127,460 @@ def fetch_youtube_channel(url, self, name):
 
         #encode text
         requestResultText = requestResultText.encode('ascii', 'ignore')
-        # requestResultText = requestResultText.decode('utf8', 'replace')
-
-        #regex youtube channel title
-        formatChannelTitle1 = re.findall(r'<title>.*YouTube</title>', str(requestResultText))
-        formatChannelTitle2 = str(formatChannelTitle1[0])
-        formatChannelTitle3 = formatChannelTitle2[7:]
-        channelTitle = formatChannelTitle3[:-18]
-        channelTitleFormated = channelTitle.replace(" ", "_").lower()
     else:
         print("youtube channel fetch failed")
 
-    # try:
-    #replace characters
-    requestResultText = str(requestResultText).replace("\\u0026", "&")
+    #create txt file
+    # with open("Output.txt", "w") as text_file:
+    #     text_file.write(str(requestResultText))
+    # return
 
     #regex youtube video data
-    youtubeVideos = re.findall(r'"title":{"runs":\[{"text":"[\w*\s*\d*,*-*!*"*_*\/*:*\\*}*{*\]\'*\.\\*\-*\#*\|*\(*\)*&*+*]*ago"', requestResultText)
-    # youtubeVideos = re.findall(r'"title":{"runs":\[{"text":"[^.]*"}],"[^.]*"publishedTimeText":{"simpleText":[^.]*ago"', requestResultText)
+    requestResultText = str(requestResultText)
+    requestResultText = str(requestResultText).replace("\\u0026", "&")
+    regexYoutubeVideos = re.findall(r"\"title\":{\"runs\":\[{\"text\":\"[\w\d\s;:!&#$%€&,.\"?+*=\\/()}{´`¨'@£¤\-_|<>^¨]*\"}],\"a", requestResultText)
+    regexYoutubeLink = re.findall(r'{\"url\":\"/watch\?v=[\w\d\-_\\/#+?&]*.', requestResultText)
+    regexYoutubeUploadDate = re.findall(r'{\"simpleText\":\"[\w\d\s]*ago\"}', requestResultText)
     
-    #add videos to news feed
-    for videoTitle in youtubeVideos[:numberOfVideosLimit]:
-        #variables
-        youtubeVideoCounter += 1
+    #debugging
+    print(str(len(regexYoutubeVideos)))
+    print(str(len(regexYoutubeLink)))
+    print(str(len(regexYoutubeUploadDate)))
+    
+    #variables
+    totalYoutubeVideos = len(regexYoutubeVideos)
+    
+    #null check
+    if totalYoutubeVideos == 0:
+        print("0 youtube posts found for: " + name)
+        Thread(target=lambda : displayNewsCard(self, counterTNS, name, "default", "youtube", "null")).start() #display card
+        return
+    
+    #sort video info
+    elif totalYoutubeVideos > 0:
+        for videoTitle in regexYoutubeVideos:
+            #variables
+            youtubeVideoCounter += 1
+            youtubeTotalVideos = str(len(regexYoutubeVideos))
 
-        #regex youtube video upload date
-        formatFindUploadDate = re.findall(r':"[\d]*\s[^.]*ago"', videoTitle)
-        if formatFindUploadDate == []:
-            formatFindUploadDate = re.findall(r':"Streamed\s[\d]*\s[^.]*ago"', videoTitle)
-            formatFindUploadDate = str(formatFindUploadDate).replace("Streamed ", "")
-            formatFindUploadDate = str(formatFindUploadDate).lower()
+            #format title
+            regexYoutubeTitle = re.findall(r'"text":"[^.]*"}],"', videoTitle)
+            formatYoutubeTitle = str(regexYoutubeTitle)
+            formatYoutubeTitle = formatYoutubeTitle.replace("\"}],\"']", "").replace("['\"text\":\"", "")
+            formatYoutubeTitle = formatYoutubeTitle.replace("\\\\\"", "").replace("\\\\", "").replace("\\", "")
+            formatYoutubeTitle = formatYoutubeTitle.replace("   ", " ").replace("  ", " ")
 
-        #format youtube video upload date
-        formatUploadDateStep1 = str(formatFindUploadDate)[4:]
-        formatUploadDateStep2 = str(formatUploadDateStep1)[:(len(formatUploadDateStep1) - 3)]
-        formatedUploadDate = formatUploadDateStep2
-
-        #regex youtube video title
-        formatFindTitle = re.findall(r'"text":"[^.]*"}],"', videoTitle)
-
-        #format youtube video title
-        formatTitleStep1 = str(formatFindTitle)[10:]
-        formatTitleStep2 = str(formatTitleStep1)[:(len(formatTitleStep1) - 7)]
-        formatTitleStep3 = str(formatTitleStep2).replace("\\\\\"", "\"")
-        formatTitleStep4 = str(formatTitleStep3).replace("\\'", "'")
-        formatTitleStep5 = str(formatTitleStep4).replace("   ", " ")
-        formatTitleStep6 = str(formatTitleStep5).replace("  ", " ")
-        formatedTitle = formatTitleStep6
-
-        #create news cards
-        if youtubeVideoCounter <= numberOfVideosLimit:
-            time.sleep(0.1)
-            cardText = name + " · Youtube · " + str(formatedUploadDate) + " · " + "\n" + str(formatedTitle) + "\n"
-            # print(" " + "youtube" + " - " + str(formatedUploadDate) + " - " + str(formatedTitle))
-
-            #update news card #1        
-            if(youtubeVideoCounter == 1):
-                self.ids.newsCard1Post.text = cardText #update text
-                Thread(target=lambda : displayNewsCard(self, 1, 101, cardText, 'youtube', name)).start() #display card
-
-            #update news card #2        
-            elif(youtubeVideoCounter == 2):
-                self.ids.newsCard2Post.text = cardText #update text
-                Thread(target=lambda : displayNewsCard(self, 2, 102, cardText, 'youtube', name)).start() #display card
-
-            #update news card #3      
-            elif(youtubeVideoCounter == 3):
-                self.ids.newsCard3Post.text = cardText #update text
-                Thread(target=lambda : displayNewsCard(self, 3, 103, cardText, 'youtube', name)).start() #display card
-        else:
-            print("error: " + str(youtubeVideoCounter) + ". " + str(formatedTitle) + " - " + str(formatedUploadDate))
-    # except:
-        # print("youtube channel does not exist")
-
-# def fetch_twitter_profile(username, self, name):
-#     #null check
-#     if username == "":
-#         print("twitter username is null")
-#         return
-
-#     #variables
-#     numberOfTweetsLimit = 3
-#     userTweets = []
-#     c = twint.Config()
-#     c.Username = username
-#     c.Limit = 3 # buggy does not represent actual number
-#     c.Hide_output = True
-#     c.Store_object = True
-#     c.Store_object_tweets_list = userTweets
-
-#     #try fetch data
-#     try:
-#         twint.run.Search(c)
-#         # print("fetched " + str(len(userTweets)) + " tweets")
-#         # print(username + " latest tweets:")
-#         tCounter = 0
-#         for t in userTweets[:numberOfTweetsLimit]:
-#             tCounter += 1
-#             # print("#" + str(tCounter) + " - " + t.username + " - " + t.datestamp + " - " + t.tweet)
-#             # print("#" + str(tCounter) + " - " + "twitter" + " - " + t.datestamp + " - " + t.tweet)
-#             # self.ids.svLabel.text += "\n" + "twitter" + " - " + t.datestamp.replace("-", "/") + ": " + t.tweet + "\n"
-#             # self.ids.svScrollBar.scroll_y = 0
+            #format date
+            formatYoutubeUploadDate = str(regexYoutubeUploadDate[youtubeVideoCounter - 1])
+            formatYoutubeUploadDate = formatYoutubeUploadDate.replace('{"simpleText":"', "").replace('\"}', "")
             
-#             #create news card
-#             time.sleep(0.1)
-#             print(" " + "twitter" + " - " + t.datestamp + " - " + t.tweet)
-#             cardText = "Twitter" + " - " + t.datestamp.replace("-", "/") + "\n" + t.tweet
-#             bl = StartingScreen.createNewsCard(self, cardText, 'twitter', name)
-#             self.ids.boxLayoutPost.add_widget(bl)
-        
-#         # print(str(len(userTweets)))
-#         # print("")
-#     except:
-#         print("twitter profile does not exist")
+            #format link
+            formatYoutubeLink = str(regexYoutubeLink[youtubeVideoCounter - 1])
+            formatYoutubeLink = formatYoutubeLink.replace("{\"url\":\"", "").replace("\"", "")
+            formatYoutubeLink = "https://www.youtube.com" + formatYoutubeLink # piped.kavin.rocks/
+
+            #create post obj
+            post = {
+                "id": str(youtubeVideoCounter),
+                "user": str(name),
+                "title": str(formatYoutubeTitle),
+                "date": str(formatYoutubeUploadDate),
+                "link": str(formatYoutubeLink)
+            }
+
+            #add post
+            savedYoutubePosts.append(post)
+
+        #update news card content       
+        counterSYP = -1
+        Thread(target=lambda : displayNewsCard(self, counterTNS, name, "null", "youtube", savedYoutubePosts[0])).start() #display card
+
+
+def nitterFilterPost(type, obj, link):
+    #replace characters
+    link = str(link)
+    link = link.replace(" ", "-")
+    link = link.replace("NEW-VIDEO---", "")
+    link = link[0:20]
     
+    #select filter type
+    if type == "text":
+        #regex
+        text = re.findall(r'<div class="tweet-content media-body" dir="auto">.*', obj); text = str(text)
+
+        #format text
+        if(len(text) > 0):
+            text = str(text)
+            text = text.replace("\\\\\\", "")
+            text = text.replace("\\\\n\\\\n", "\n")
+            text = text.replace("\\\\n", "\n")
+            text = text.replace(": - ", ": ")
+            text = text.replace("['<div class=\"tweet-content media-body\" dir=\"auto\">", "")
+            text = text.replace("</div>']", "")
+            text = text.replace("']", "")
+            text = text.replace("\\'", "'")
+            text = text.replace("https://", "")
+            text = text.replace("piped.kavin.rocks/", "youtube.com/watch?v=")
+            # text = text.split('">')[0]
+            # does not filter out comments # ex: <a href="youtube.com/watch?v=QsHuE0LOPIY">youtube.com/watch?v=QsHuE0LOPIY</a>
+            # @.*[^</a>]
+            # <a href=".*@.*</a>
+            return text
+
+        #null check
+        elif(len(text) == 0): return "False"
+
+    elif type == "retweet":
+        #regex
+        retweet = re.findall(r'<div class="retweet-header">.*</span>', obj)
+        
+        #tweet is retweet
+        if(len(retweet) > 0): return "True"
+
+        #tweet is original
+        elif(len(retweet) == 0): return "False"
+
+    elif type == "pinned":
+        #regex
+        pinned = re.findall(r'<div class="pinned">', obj)
+        
+        #tweet is pinned
+        if(len(pinned) > 0): return "True"
+
+        #tweet is not pinned
+        elif(len(pinned) == 0): return "False"
+            
+    elif type == "date":
+        #regex
+        date = re.findall(r'title=".*</a></span>', obj); date = date[0]
+        
+        #format date
+        if(len(date) > 0):
+            date = str(date)
+            date = date.split("\">")[0]
+            date = date.replace('title="', "")
+            date = date[0:-14]
+            date = date.replace(",", "")
+            return date
+            
+        #null check
+        elif(len(link) == 0): return "False"
+
+    elif type == "link":
+        #regex
+        link = re.findall(r'<a class="tweet-link" href="/.*</a>', obj)
+        
+        #format link
+        if(len(link) > 0):
+            link = str(link)
+            link = link.replace("['<a class=\"tweet-link\" href=\"/", "")
+            link = link.replace("\"></a>']", "")
+            link = link.replace("#m", "")
+            link = "https://nitter.net/" + link
+            return link
+
+        #null check
+        elif(len(link) == 0): return "False"
+
+    elif type == "likes":
+        #regex
+        likes = re.findall(r'icon-heart" title=""></span>.*', obj)
+
+        #format likes
+        if(len(likes) > 0):
+            likes = str(likes)
+            likes = likes.replace("['icon-heart\" title=\"\"></span> ", "")
+            likes = likes.replace("</div></span>']", "")
+            likes = likes.replace(",", ".")
+            if likes == "": likes = "0"
+            return likes
+
+        #null check
+        elif(len(likes) == 0): return "False"
+            
+    elif type == "qoutes":
+        #regex
+        qoutes = re.findall(r'icon-quote" title=""></span>.*', obj)
+
+        #format qoutes
+        if(len(qoutes) > 0):
+            qoutes = str(qoutes)
+            qoutes = qoutes.replace("['icon-quote\" title=\"\"></span>", "")
+            qoutes = qoutes.replace("['icon-quote\" title=\"\"></span> ", "")
+            qoutes = qoutes.replace("</div></span>']", "")
+            qoutes = qoutes.replace(",", ".")
+            qoutes = qoutes.replace(" ", "")
+            if qoutes == "": qoutes = "0"
+            return qoutes
+
+        #null check
+        elif(len(qoutes) == 0): return "False"
+
+    elif type == "retweets":
+        #regex
+        retweets = re.findall(r'icon-retweet" title=""></span>.*', obj)
+
+        #format retweets count
+        if(len(retweets) > 0):
+            retweets = str(retweets)
+            retweets = retweets.replace("[\'icon-retweet\" title=\"\"></span> ", "")
+            retweets = retweets.replace("</div></span>']", "")
+            retweets = retweets.replace(",", ".")
+            retweets = retweets.replace("Marques Brownlee retweeted</div></span></div>'. 'icon-retweet\" title=\"\"></span> ", "")
+            if retweets == "": retweets = "0"
+            return retweets
+
+        #null check
+        elif(len(retweets) == 0): return "False"
+
+    elif type == "comments":
+        #regex
+        comments = re.findall(r'icon-comment" title=""></span>.*', obj)
+
+        #format comments count
+        if(len(comments) > 0):
+            comments = str(comments)
+            comments = comments.replace("[\'icon-comment\" title=\"\"></span> ", "")
+            comments = comments.replace("</div></span>']", "")
+            comments = comments.replace(",", ".")
+            if comments == "": comments = "0"
+            return comments
+        elif(len(comments) == 0): return "False"
+
+    elif type == "videos":
+        #variables
+        videosArray = []
+
+        #regex
+        videos = re.findall(r'class="gallery-video"><div class="attachment video-container">\n<img src=".*', obj)
+
+        #format video thumbnail url
+        if(len(videos) > 0):
+            for vid in videos:
+                vid = vid.replace("\n", "")
+                vid = vid.replace("class=\"gallery-video\"><div class=\"attachment video-container\">", "")
+                vid = vid.replace("<img src=\"/", "")
+                vid = vid.replace("\"/>", "")
+                vid = "https://nitter.net/" + vid
+                videosArray.append(vid)
+            return videosArray
+
+        #null check
+        elif(len(videos) == 0): return "False"
+            
+    elif type == "images":
+        #variables
+        imagesArray = []
+
+        #regex
+        images = re.findall(r'target="_blank"><img alt="" src="/pic.*/>', obj)
+
+        #handle images
+        if(len(images) > 0):
+            #variables
+            count = 0
+
+            #handle img urls
+            for img in images:
+                count = count + 1
+
+                #format img url
+                img = img.replace("target=\"_blank\"><img alt=\"\" src=\"/", "")
+                img = img.replace("\"/>", "")
+                
+                #add to array
+                imagesArray.append(img)
+
+                #download img
+                # img = img.replace("%3Fname%3Dsmall", "")
+                # img = "https://nitter.net/" + img
+                # img_data = requests.get(img).content
+                # with open(os.getcwd() + "/temp/" + str(link) + "-" + str(count) + ".jpg", 'wb') as handler: handler.write(img_data)
+                
+            return imagesArray
+            
+        #null check
+        elif(len(images) == 0): return "False"
+
+    elif type == "poll":
+        #regex
+        poll = re.findall(r'<div class="poll-meter leader">\n.*</span>\n.*</span>\n.*</span>\n.*</div>', obj)
+        pollLeader = re.findall(r'<div class="poll-meter leader">\n.*</span>\n.*</span>\n.*</span>\n.*</div>', obj)
+        pollLeader = str(pollLeader)
+        pollLeader = pollLeader.split('<span class="poll-choice-option">')
+        pollItems = re.findall(r'<div class="poll-meter">\n.*</span>\n.*</span>\n.*</span>\n.*</div>', obj)
+        pollVotes = re.findall(r'<span class="poll-info">.*</span>', obj)
+
+        #handle poll text
+        if(len(pollLeader) == 2):
+            #format poll leader
+            pollLeaderPercentage = str(pollLeader[0].split("%")[0].replace("['<div class=\"poll-meter leader\">\\n<span class=\"poll-choice-bar\" style=\"width: ", ""))
+            pollLeaderText = str(pollLeader[1].split("%")[0]).replace("</span>\\n</div>']", "")
+            obj = pollLeaderPercentage + "%" + " · " + pollLeaderText
+
+            #format poll items
+            pollItems = str(pollItems).replace("['", "").replace("']", "")
+            pollItems = pollItems.split('\'<div class="poll-meter">')
+            for i in pollItems:
+                i = i.replace('<div class=\"poll-meter\">\\n<span class=\"poll-choice-bar\" style=\"width: ', "")
+                i = i.replace('\\n<span class=\"poll-choice-bar\" style=\"width:  ', "")
+                i = i.replace('</span>\\n<span class=\"poll-choice-option\">', " · ")
+                i = i.replace('</span>\\n</div>', "")
+                i = i.replace('; ', " · ")
+                i = i.replace("'", "")
+                i = i.replace(", ", "")
+                i = i.split(" · ")[0] + " · " + i.split(" · ")[2]
+                obj = obj + "\n" + i
+
+            #format poll votes
+            pollVotes = str(pollVotes)
+            pollVotes = pollVotes.replace("['<span class=\"poll-info\">", "")
+            pollVotes = pollVotes.replace("</span>']", "")
+            pollVotes = pollVotes.replace(",", ".")
+            pollVotes = pollVotes.replace(" votes • Final results", "")
+            pollVotes = "Total Votes: " + pollVotes
+            obj = obj + "\n" + pollVotes
+
+            return obj
+
+        #null check
+        elif(len(pollLeader) == 1): return "False"
+            
+    elif type == "youtube":
+        #regex
+        obj = re.findall(r'https://piped.kavin.rocks/.*</div>', obj)
+
+        #format youtube url
+        if(len(obj) > 0): 
+            obj = str(obj)
+            obj = obj.replace("piped.kavin.rocks/", "youtube.com/watch?v=")
+            obj = obj.replace("['", "")
+            obj = obj.replace("']", "")
+            obj = obj = obj.split('">')[0]
+            return obj
+
+        #null check
+        elif(len(obj) == 0): return "False"
+
+
+def fetch_twitter_profile(username, self, name):
+    #null check
+    if username == "":
+        print("twitter username is null"); 
+        return
+
+    #variables
+    global savedTwitterPosts
+    global counterSTP
+    savedTwitterPosts = []
+    counterSTP = -1
+    numberOfTweetsLimit = 3
+
+    #request twitter profile
+    httpRequest = requests.get("https://nitter.net/" + username) #nitter certificate expired 2022/Oct/30
+    
+    #handle request result
+    if httpRequest.status_code == 200:
+        #variables
+        requestResultText = str(httpRequest.text)
+
+        #debugging
+        # print(requestResultText)
+
+        #parse html
+        className = "timeline-item"
+        soup = BeautifulSoup(requestResultText, 'html.parser')
+        tweets = soup.find_all('div', class_=className)
+        print(className + ": " + str(len(tweets)))
+
+        #handle tweets
+        count = 0
+        for obj in tweets:
+            obj = str(obj)
+
+            #filter post text
+            link = nitterFilterPost("link", obj, False)
+            date = nitterFilterPost("date", obj, link)
+            pinned = nitterFilterPost("pinned", obj, link)
+            retweet = nitterFilterPost("retweet", obj, link)
+            text = nitterFilterPost("text", obj, link)
+            youtube = nitterFilterPost("youtube", obj, link)
+            poll = nitterFilterPost("poll", obj, link)
+            images = nitterFilterPost("images", obj, text)
+            videos = nitterFilterPost("videos", obj, link)
+
+            #might use later
+            # comments = nitterFilterPost("comments", obj, link); print("comments: " + comments)
+            # retweets = nitterFilterPost("retweets", obj, link); print("retweets: " + retweets)
+            # qoutes = nitterFilterPost("qoutes", obj, link); print("qoutes: " + qoutes)
+            # likes = nitterFilterPost("likes", obj, link); print("likes: " + likes)
+
+            #check if tweet is pinned or a retweet
+            if pinned != "True" and retweet != "True":
+                count = count + 1
+                post = {
+                    "id": count,
+                    "username": username,
+                    "link": link,
+                    "date": date,
+                    "pinned": pinned,
+                    "retweet": retweet,
+                    "text": text,
+                    "youtube": youtube,
+                    "poll": poll,
+                    "images": images,
+                    "videos": videos
+                }
+                savedTwitterPosts.append(post)
+
+        #debugging
+        print(str(len(savedTwitterPosts)))
+        
+        if len(savedTwitterPosts) == 0:
+            print("0 twitter posts found for: " + name)
+
+            Thread(target=lambda : displayNewsCard(self, counterTNS, name, "default", "twitter", "null")).start() #display card
+            return
+
+        elif len(savedTwitterPosts) > 0:
+            #update card
+            username = str(savedTwitterPosts[0]["username"])
+            id = "Twitter" + " · " + str(savedTwitterPosts[0]["id"]) + "/" + str(len(savedTwitterPosts))
+            date = str(savedTwitterPosts[0]["date"])
+            text = str(savedTwitterPosts[0]["text"])
+            images = savedTwitterPosts[counterSTP]["images"]
+            videos = savedTwitterPosts[counterSTP]["videos"]
+            youtube = str(savedTwitterPosts[counterSTP]["youtube"])
+
+            #add links to card
+            count = 0
+            if savedTwitterPosts[0]["images"] != "False":
+                None 
+                # for img in images:
+                #     count = count + 1
+                #     img = img.replace("%3Fname%3Dsmall", "")
+                #     cardText = cardText + "\n" + str(count) + ": " + "nitter.net/" + img
+                # cardText = cardText + "\n" + str(count) + ": " + "nitter.net/" + images
+            if savedTwitterPosts[0]["videos"] != "False": 
+                count = count + 1
+                video = videos[0]
+                video = video.replace("https://", "")
+                video = video.replace("http://", "")
+                video = video.replace("http://", "")
+                video = video.replace("www.", "")
+                # cardText = cardText + "\n" + str(count) + ": " + video
+            if savedTwitterPosts[0]["youtube"] != "False": 
+                count = count + 1
+                youtube = youtube.replace("https://", "")
+                youtube = youtube.replace("http://", "")
+                youtube = youtube.replace("http://", "")
+                youtube = youtube.replace("www.", "")
+                # cardText = cardText + "\n" + str(count) + ": " + youtube
+
+            counterSTP = -1
+            Thread(target=lambda : displayNewsCard(self, counterTNS, name, "null", "twitter", savedTwitterPosts[0])).start() #display card
+    
+
 def year_progress():
     #variables
     JAN = 31
@@ -234,6 +631,7 @@ def year_progress():
     
     return formattedDate
 
+
 def add_profile(self, name, youtube = None, twitter = None):
     #variables
     profiles = []
@@ -279,6 +677,7 @@ def add_profile(self, name, youtube = None, twitter = None):
     json.dump(profiles, out_file, indent = 6)
     out_file.close()
 
+
 def fetch_news_feed(name, self):
     #fetch profiles from profiles.json
     file = open('profiles.json', "r")
@@ -299,14 +698,32 @@ def fetch_news_feed(name, self):
     for p in profiles:
         if p['name'] == name: 
             print(p['name'])
-            fetch_youtube_channel(p['youtube'], self, name)
-            # fetch_twitter_profile(p['twitter'], self, name)
 
-    #fetch profile twitter data
-    # for p in profiles:
-    #     if p['name'] == name: 
-    #         print(p['name'])
+            global counterTNS
+            twitter = p['twitter']
+            youtube = p['youtube']
+            
+            counterTNS = 1
             # fetch_twitter_profile(p['twitter'], self, name)
+            # fetch_youtube_channel(p['youtube'], self, name)
+            # return
+
+            if p['twitter'] != "" and p['youtube'] != "":
+                counterTNS = 1
+                fetch_twitter_profile(p['twitter'], self, name)
+                counterTNS = 2
+                fetch_youtube_channel(p['youtube'], self, name)
+
+            elif p['twitter'] == "":
+                counterTNS = 1
+                fetch_youtube_channel(p['youtube'], self, name)
+
+            elif p['youtube'] == "":
+                counterTNS = 1
+                fetch_twitter_profile(p['twitter'], self, name)
+
+            
+
 
 def fetch_saved_profiles():
     #fetch profiles from profiles.json
@@ -314,11 +731,13 @@ def fetch_saved_profiles():
     profiles = json.load(file)
     return profiles
 
+
 def fetch_saved_favorites():
     #fetch profiles from favorites.json
     file = open('favorites.json', "r")
     favorites = json.load(file)
     return favorites
+
 
 def fetch_profile_image(url, name):
     #fetch profile image from google
@@ -392,36 +811,38 @@ def fetch_profile_image(url, name):
         print("profile image fetch failed")
         return False
 
+
 def changeScreenToAdd(self):
     self.manager.current = 'add' #change to add profile screen 
+
 
 def changeScreenToEdit(self):
     self.manager.current = 'edit' #change to edit profile screen 
 
+
 def changeScreenToStart(self):
     self.manager.current = 'start' #change to start screen 
+
 
 def changeScreenToFavorites(self):
     self.manager.current = 'favorites'  #change to favorites screen 
 
+
 def changeScreenToMenu(self):
     self.manager.current = 'menu'  #change to menu screen 
+
 
 def refreshScreen(self, screenName):
     self.manager.current = 'blank' #change to blank screen
     self.manager.current = screenName #change back to previous screen
+
 
 # def openNewsInWebBrowser(self, searchString):
 #     webbrowser.open_new('http://duckduckgo.com/?q=' + searchString)
 
 
 
-### kivy ###
-kivy.require('2.1.0')
-# Config.set('graphics', 'resizable', 0)
-# Config.set('graphics', 'width', '200')
-# Config.set('graphics', 'height', '200')
-
+###### kivy ######
 class StartingScreen(Screen):
     def __init__(self, **var_args):
         super(StartingScreen, self).__init__(**var_args)
@@ -524,8 +945,10 @@ class StartingScreen(Screen):
         if(totalButtons != totalSavedProfiles + totalMenuButtons):
             #create button
             newButton = Button(
-                background_normal =  os.getcwd() + "/thumbnails/" + profile['name'].lower() + ".jpg",
-                size_hint_y = None
+                background_normal =  os.getcwd() + "/thumbnails/" + profile['name'] + ".jpg",
+                background_down =  os.getcwd() + "/thumbnails/" + profile['name'] + ".jpg",
+                size_hint_y = None,
+                opacity = 0.9,
             )
 
             #bind function buttons
@@ -552,44 +975,66 @@ class StartingScreen(Screen):
             self.bl2.add_widget(newButton)
 
 
-    def saveToFavorites(screen, self, text):
+    def saveToFavorites(screen, self, type):
+        # print(savedTwitterPosts[counterSTP])
+        # print(savedYoutubePosts[counterSYP])
+        
+        if type == "twitter":
+            if len(savedTwitterPosts) == 0: 
+                return
+
+            elif len(savedTwitterPosts) > 0:
+                post = savedTwitterPosts[counterSTP]
+
+                #create button id
+                id = post['username'] + post['text'] + post['date']
+                id = id.replace(" ", "").replace("_", "").replace("-", "").replace("\n", "").replace("·", "").replace("u00b7", "")
+                id = id[0:60]
+
+                newFavorite = {
+                    "id": id,
+                    "profile": post['username'], 
+                    "date": post['date'],
+                    "platform": type, 
+                    "savedAt": str(datetime.datetime.now())[0:10], 
+                    "text": post['text'],
+                    "img": "/thumbnails/" + post['username'] + ".jpg",
+                    "link": post['link']
+                }
+
+        elif type == "youtube":
+            post = savedYoutubePosts[counterSYP]
+
+            if len(savedYoutubePosts) == 0: 
+                return
+
+            elif len(savedYoutubePosts) > 0:
+                #create button id
+                id = post['user'] + post['title'] + post['date']
+                id = id.replace(" ", "").replace("_", "").replace("-", "").replace("\n", "").replace("·", "").replace("u00b7", "")
+                id = id[0:60]
+
+                newFavorite = {
+                    "id": id,
+                    "profile": post['user'],
+                    "date": post['date'], 
+                    "platform": type, 
+                    "savedAt": str(datetime.datetime.now())[0:10], 
+                    "text": post['title'],
+                    "img": "/thumbnails/" + post['user'] + ".jpg",
+                    "link": post['link']
+                }
+        
         #fetch favorites from favorites.json
         file = open('favorites.json', "r")
         favorites = json.load(file)
         totalFavorites = len(favorites)
 
-        #create button id
-        btnIdFormatting1 = text.replace(" ", "")
-        btnIdFormatting2 = btnIdFormatting1.replace("_", "")
-        btnIdFormatting3 = btnIdFormatting2.replace("-", "")
-        btnIdFormatting4 = btnIdFormatting3.replace("\n", "")
-        btnIdFormatting5 = btnIdFormatting4.replace("·", "")
-        btnIdFormatting6 = btnIdFormatting5.replace("u00b7", "")
-        btnIdFormatted = str(btnIdFormatting6[0:60])
-        id = btnIdFormatted
-        
-        #variables favorite
-        profile = text.split(" · ")[0]
-        platform = text.split(" · ")[1]
-        savedAt = str(datetime.datetime.now())
-        postedAt = text.split(" · ")[2]
-        text = text.split(" · ")[3].replace("\n", "")
-        
-        #save favorite
-        newFavorite = {
-            "id": id,
-            "profile": profile, 
-            "platform": platform, 
-            "savedAt": savedAt, 
-            "text": postedAt + " · " + text,
-            "img": "/" + profile + ".jpg"
-        }
-        
         #check if favorite already saved
         for f in favorites:
             if f['id'] == id: print('news card already saved'); return
         
-        #add favorite to favorites.json
+        #save favorite
         favorites.append(newFavorite)
         out_file = open("favorites.json", "w")
         json.dump(favorites, out_file, indent = 6)
@@ -597,6 +1042,7 @@ class StartingScreen(Screen):
         
 
     def removeFromFavorites(self, cardId):
+        print("removeFromFavorites")
         #fetch favorites from favorites.json
         file = open('favorites.json', "r")
         favorites = json.load(file)
@@ -617,152 +1063,116 @@ class StartingScreen(Screen):
 
 
     def createNewsCard(self, *args):
-        #variables
-        text = args[0]
-        newsType = args[1]
-        profile = args[2]
-        baseHeight = 160
-        baseWidth = 600
+        obj = args[0]
+        id = obj['id']
+        profile = obj['profile']
+        platform = obj['platform']
+        savedAt = obj['savedAt']
+        text = obj['text']
+        img = obj['img']
+        date = obj['date']
+        link = obj['link']
 
-        #handle date
-        try: savedAt = args[3]
-        except: savedAt = ""
-
-        #clean text from special characters
-        cleanText1 = text.replace("\\", "")
-        cleanText2 = cleanText1.replace("\\\\", "")
-        cleanText3 = cleanText2.replace("//", "")
-        text = cleanText3
-
-        #calculate card text height & width
-        tempTextLength = len(text)
-        textHeightMultiplier = int((tempTextLength) / 107) # one line of text 107 chars
-        textHeight = 37 * textHeightMultiplier # one line of text add 37 px
-        textHeightMinusCorrection = (textHeightMultiplier) * 20 # if multiplier is above 2 minus 20 px
-        if textHeightMultiplier > 1:totalHeight = baseHeight + textHeight - textHeightMinusCorrection
-        else: totalHeight = baseHeight + textHeight
-        totalWidth = baseWidth
+        if platform == "twitter": platform = "Twitter"
+        elif platform == "youtube": platform = "Youtube"
 
         #create boxlayout
         bl = BoxLayout(
             orientation = "horizontal", 
             size_hint_x = None, 
             size_hint_y = None,
-            height = 100,
+            height = 240,
             width = 600,
-            spacing = -2,
-            padding = 0
+            # spacing = (40, 40),
+            # padding = (40, 40)
         )
 
         #fetch favorites from favorites.json
         file = open('favorites.json', "r")
         favorites = json.load(file)
 
-        #create button id
-        btnId = profile + newsType + text
-        btnIdFormatting1 = btnId.replace(" ", "")
-        btnIdFormatting2 = btnIdFormatting1.replace("_", "")
-        btnIdFormatting3 = btnIdFormatting2.replace("-", "")
-        btnIdFormatting4 = btnIdFormatting3.replace("\n", "")
-        btnIdFormatting5 = btnIdFormatting4.replace("·", "")
-        btnIdFormatting6 = btnIdFormatting5.replace("u00b7", "")
-        btnId = str(btnIdFormatting6[0:60])
-        
         #create profile image button
         btnProfileImg = Button(
             size_hint_x = None, 
             size_hint_y = None, 
-            height = 100, 
-            width = 100, 
-            background_normal =  os.getcwd() + "/thumbnails/" + profile.lower() + ".jpg",
+            height = 220, 
+            width = 220, 
+            background_normal =  os.getcwd() + "/thumbnails/" + profile + ".jpg",
             color = 'lightgray'
         )
-        btnProfileImg.id = btnId
         
         #create remove button
-        if btnId in str(favorites):
-            btn = Button(
-                text = "-", 
-                size_hint_x = None, 
-                size_hint_y = None,
-                height = 100,
-                width = 70, 
-                background_color = 'darkred', 
-                background_normal = 'darkred', 
-                background_down = 'darkred',
-                font_size = 24,
-                color = 'lightgray'
-            )
-            btn.id = btnId
+        btn1 = Button(
+            text = "-", 
+            size_hint_y = 0.5,
+            size_hint_x = None, 
+            width = 70, 
+            background_color = get_color_from_hex('#0e1012'), 
+            background_normal = 'transparent',
+            background_down = 'transparent',
+            font_size = 19,
+            color = 'lightgray',
+            opacity = 0.9
+            # height = 110,
+        )
 
-        #create save button
-        elif btnId not in str(favorites):
-            btn = Button(
-                text = "+", 
-                size_hint_x = None, 
-                size_hint_y = None,
-                height = 100,
-                width = 70, 
-                background_color = 'green', 
-                background_normal = 'green', 
-                background_down = 'green',
-                font_size = 24,
-                color = 'lightgray'
-            )
-            btn.id = btnId
-        
-        #create button
-        else:
-            btn = Button(
-                text = "+", 
-                size_hint_x = 0.1, 
-                size_hint_y = 1, 
-                background_color = 'green', 
-                background_normal = 'green', 
-                background_down = 'green',
-                color = 'lightgray'
-            )
-            btn.id = btnId
+        btn2 = Button(
+            text = "§", 
+            size_hint_y = 0.5,
+            size_hint_x = None, 
+            width = 70, 
+            background_color = get_color_from_hex('#0e1012'), 
+            background_normal = 'transparent',
+            background_down = 'transparent',
+            font_size = 19,
+            color = 'lightgray',
+            opacity = 0.9
+            # height = 110,
+        )
+
+        #create boxlayout
+        sl = StackLayout(
+            orientation = "tb-lr", 
+            size_hint_y = 0.917,
+            size_hint_x = None, 
+            # height = 300,
+            # width = 600,
+            # spacing = (0, 20),
+            # padding = (0, 20)
+        )
         
         #bind functions to buttons
-        btn.bind(on_press=lambda *args: StartingScreen.removeFromFavorites(self, btn.id))
+        btn1.bind(on_press=lambda *args: StartingScreen.removeFromFavorites(self, id))
+        btn2.bind(on_press=lambda *args: StartingScreen.copyToClipboard(self, link))
 
         #create news card
         btnNewsCard = Button(
-                text = savedAt + " · " + newsType + " · " + text.split(" · ")[0] + "\n" + text.split(" · ")[1],
-                size_hint_y = None,
-                size_hint_x = None,
-                padding = (60, 40), #left, top
-                text_size = (600, totalHeight),
-                height = 100,
-                width = 499,
-                multiline = True,
-                disabled = False,
-                halign = 'left',
-                valign = 'top',
-                color = 'lightgray',
-                background_color = get_color_from_hex("#292f33"),
-                background_normal = 'transparent',
-                background_down = 'transparent'
+            text = "Saved: " + savedAt + "\n" + platform + " · " + profile + " · " + date + "\n\n" + text,
+            size_hint_y = None,
+            size_hint_x = None,
+            padding = (40, 40), #left, top
+            text_size = (560, 240),
+            height = 220,
+            width = 560,
+            # multiline = True,
+            disabled = False,
+            halign = 'left',
+            valign = 'top',
+            color = 'white',
+            background_color = get_color_from_hex("#0e1012"), # #292f33
+            background_normal = 'transparent',
+            background_down = 'transparent',
+            bold = True,
+            font_size = 16,
+            opacity = 0.9
             )
-
-        #set background color
-        # if newsType == 'twitter':
-        #     b2.background_color = get_color_from_hex("#55acee")
-        #     b2.background_normal = 'transparent'
-        #     b2.background_down = 'transparent'
-        # elif newsType == 'youtube':
-        #     b2.background_color = get_color_from_hex("#e52d27")
-        #     b2.background_normal = 'transparent'
-        #     b2.background_down = 'transparent'
-
-        #set search string
-        # searchString = "searchString" # text.split("\n")[1]
 
         #add widgets to boxlayout
         bl.add_widget(btnProfileImg)
         bl.add_widget(btnNewsCard)
-        bl.add_widget(btn)
+        sl.add_widget(btn2)
+        sl.add_widget(btn1)
+        bl.add_widget(sl)
 
         return bl
 
@@ -829,6 +1239,222 @@ class StartingScreen(Screen):
         self.ids.boxLayoutPost.add_widget(titleCardAdd)
         self.ids.boxLayoutPost.add_widget(titleCardDelete)
         self.ids.boxLayoutPost.add_widget(titleCardFavorites)
+
+    
+    def twitterNextPost(self, order):
+        print("twitterNextPost")
+        #variables
+        global counterSTP
+        totalTwitterPosts = len(savedTwitterPosts)
+
+        if totalTwitterPosts == 0:
+            return
+
+        elif totalTwitterPosts > 0:
+            #check counter
+            if counterSTP == (len(savedTwitterPosts) - 1): 
+                counterSTP = -1
+            
+            #increment counter
+            counterSTP = counterSTP + 1; 
+
+            #set card
+            username = str(savedTwitterPosts[counterSTP]["username"])
+            id = "Twitter" + " · " + str(savedTwitterPosts[counterSTP]["id"]) + "/" + str(len(savedTwitterPosts))
+            date = str(savedTwitterPosts[counterSTP]["date"])
+            text = str(savedTwitterPosts[counterSTP]["text"])
+            images = savedTwitterPosts[counterSTP]["images"]
+            videos = savedTwitterPosts[counterSTP]["videos"]
+            youtube = str(savedTwitterPosts[counterSTP]["youtube"])
+            cardText = id + " · " + username + " · " + date + "\n\n" + text + "\n"
+
+            #debugging
+            print("\n" + str(savedTwitterPosts[counterSTP]))
+
+            
+            #add links to card
+            count = 0
+            if images != "False": 
+                for img in images:
+                    count = count + 1
+                    img = img.replace("%3Fname%3Dsmall", "")
+                    cardText = cardText + "\n" + str(count) + ": " + "nitter.net/" + img
+            if videos != "False": 
+                count = count + 1
+                video = videos[0]
+                video = video.replace("https://", "")
+                video = video.replace("http://", "")
+                video = video.replace("http://", "")
+                video = video.replace("www.", "")
+                cardText = cardText + "\n" + str(count) + ": " + video
+            if youtube != "False": 
+                count = count + 1
+                youtube = youtube.replace("https://", "")
+                youtube = youtube.replace("http://", "")
+                youtube = youtube.replace("http://", "")
+                youtube = youtube.replace("www.", "")
+                cardText = cardText + "\n" + str(count) + ": " + youtube
+            
+            #update card text
+            if order == 1: card = self.ids.newsCard1Post
+            elif order == 2: card = self.ids.newsCard2Post
+            elif order == 3: card = self.ids.newsCard3Post
+
+            card.text = cardText
+        
+    
+    def twitterPreviousPost(self, order):
+        print("twitterPreviousPost")
+        #variables
+        global counterSTP
+        totalTwitterPosts = len(savedTwitterPosts)
+
+        if totalTwitterPosts == 0:
+            return
+
+        elif totalTwitterPosts > 0:
+            #check counter
+            if counterSTP == 0: 
+                counterSTP = len(savedTwitterPosts)
+
+            #decrement counter
+            if counterSTP != 0: 
+                counterSTP = counterSTP - 1
+
+            #debugging
+            print("\n" + str(savedTwitterPosts[counterSTP]))
+            
+            #set card
+            username = str(savedTwitterPosts[counterSTP]["username"])
+            id = "Twitter" + " · " + str(savedTwitterPosts[counterSTP]["id"]) + "/" + str(len(savedTwitterPosts))
+            date = str(savedTwitterPosts[counterSTP]["date"])
+            text = str(savedTwitterPosts[counterSTP]["text"])
+            images = savedTwitterPosts[counterSTP]["images"]
+            videos = savedTwitterPosts[counterSTP]["videos"]
+            youtube = str(savedTwitterPosts[counterSTP]["youtube"])
+            cardText = id + " · " + username + " · " + date + "\n\n" + text + "\n"
+            
+            #add links to card
+            count = 0
+            if images != "False": 
+                for img in images:
+                    count = count + 1
+                    img = img.replace("%3Fname%3Dsmall", "")
+                    cardText = cardText + "\n" + str(count) + ": " + "nitter.net/" + img
+            if videos != "False": 
+                count = count + 1
+                video = videos[0]
+                video = video.replace("https://", "")
+                video = video.replace("http://", "")
+                video = video.replace("http://", "")
+                video = video.replace("www.", "")
+                cardText = cardText + "\n" + str(count) + ": " + video
+            if youtube != "False": 
+                count = count + 1
+                youtube = youtube.replace("https://", "")
+                youtube = youtube.replace("http://", "")
+                youtube = youtube.replace("http://", "")
+                youtube = youtube.replace("www.", "")
+                cardText = cardText + "\n" + str(count) + ": " + youtube
+
+            #update card text
+            if order == 1: card = self.ids.newsCard1Post
+            elif order == 2: card = self.ids.newsCard2Post
+            elif order == 3: card = self.ids.newsCard3Post
+
+            card.text = cardText
+
+    def youtubeNextPost(self, order):
+        print("youtubeNextPost")
+        #variables
+        global counterSYP
+        totalYoutubeVideos = len(savedYoutubePosts)
+
+        if totalYoutubeVideos == 0:
+            return
+
+        elif totalYoutubeVideos > 0:
+            #check counter
+            if counterSYP == (len(savedYoutubePosts) - 1): 
+                counterSYP = -1
+
+            #increment counter
+            counterSYP = counterSYP + 1
+
+            #debugging
+            print("\n" + str(savedYoutubePosts[counterSYP]))
+
+            #update card text
+            cardText = "Youtube" + " · " + savedYoutubePosts[counterSYP]['id'] + "/" + str(totalYoutubeVideos) + " · " + savedYoutubePosts[counterSYP]['user'] + " · " + savedYoutubePosts[counterSYP]['date'] + "\n\n" + savedYoutubePosts[counterSYP]['title']
+            
+            if order == 1: card = self.ids.newsCard1Post
+            elif order == 2: card = self.ids.newsCard2Post
+            elif order == 3: card = self.ids.newsCard3Post
+
+            card.text = cardText
+
+    def youtubePreviousPost(self, order):
+        print("youtubePreviousPost")
+        #variables
+        global counterSYP
+        totalYoutubeVideos = len(savedYoutubePosts)
+
+        if totalYoutubeVideos == 0:
+            return
+
+        elif totalYoutubeVideos > 0:
+            #check counter
+            if counterSYP == 0: counterSYP = len(savedYoutubePosts)
+
+            #decrement counter
+            if counterSYP != 0: 
+                counterSYP = counterSYP - 1
+
+            #debugging
+            print("\n" + str(savedYoutubePosts[counterSYP]))
+
+            #update card text
+            cardText = "Youtube" + " · " + savedYoutubePosts[counterSYP]['id'] + "/" + str(totalYoutubeVideos) + " · " + savedYoutubePosts[counterSYP]['user'] + " · " + savedYoutubePosts[counterSYP]['date'] + "\n\n" + savedYoutubePosts[counterSYP]['title']
+            
+            if order == 1: card = self.ids.newsCard1Post
+            elif order == 2: card = self.ids.newsCard2Post
+            elif order == 3: card = self.ids.newsCard3Post
+
+            card.text = cardText
+
+    def copyToClipboard(self, type):
+        print("copyToClipboard")
+        # Linux on x11 (xclip)
+        # Linux on wayland (wl-clipboard)
+
+        if type == "twitter" and len(savedTwitterPosts) != 0:
+            pyclip.copy(savedTwitterPosts[counterSTP]['link'])
+            cb_text = pyclip.paste(text=True)
+            print(cb_text)
+            
+        elif type == "youtube" and len(savedYoutubePosts) != 0:
+            pyclip.copy(savedYoutubePosts[counterSYP]['link'])
+            cb_text = pyclip.paste(text=True)
+            print(cb_text)
+
+        else:
+            pyclip.copy(type)
+            cb_text = pyclip.paste(text=True)
+            print(cb_text) 
+        
+    def nextPost(self, order, type):
+        # print("nextPost")
+        # print(order, type)
+        
+        if type == "youtube": self.youtubeNextPost(order)
+        elif type == "twitter": self.twitterNextPost(order)
+        
+    def previousPost(self, order, type):
+        # print("nextPost")
+        # print(order, type)
+        
+        if type == "youtube": self.youtubePreviousPost(order)
+        elif type == "twitter": self.twitterPreviousPost(order)
 
 
 
@@ -957,6 +1583,7 @@ class FavoritesScreen(Screen):
     def __init__(self, **var_args):
         super(FavoritesScreen, self).__init__(**var_args)
 
+
     def on_pre_enter(self, *args):
         print("FavoritesScreen")
 
@@ -983,18 +1610,23 @@ class FavoritesScreen(Screen):
         #     StartingScreen.AddFillerButtons(self)
 
         #add saved favorites news cards
-        for f in favorites[::-1]:
+        for fav in favorites[::-1]:
             if totalButtons < totalFavorites:
-                savedAt =  "saved " + str(f['savedAt'][:-16]) + "\n" + f['profile']
-                bl = StartingScreen.createNewsCard(self, f['text'], f['platform'], f['profile'], savedAt)
+                # savedAt =  "Saved " + str(fav['savedAt']) + ": "
+                bl = StartingScreen.createNewsCard(self, fav)
                 self.ids.boxLayoutPost.add_widget(bl)
+
+
 
 class BlankScreen(Screen):
     def __init__(self, **var_args):
         super(BlankScreen, self).__init__(**var_args)
     
+
     def on_pre_enter(self, *args):
         print("BlankScreen")
+
+
 
 class scraperNewsApp(App): #the Base Class of our Kivy App
     def build(self):
@@ -1034,6 +1666,8 @@ class scraperNewsApp(App): #the Base Class of our Kivy App
 
         return sm
 
-#start app
+
+
+###### start app ######
 if __name__ == '__main__':
     scraperNewsApp().run()
