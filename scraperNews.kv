@@ -35,7 +35,7 @@
                 height: self.minimum_height
                 spacing: 2
                 padding: 40, 0 # left, top
-                
+
                 Label:
                     id: category1
                     size_hint_y: None
@@ -410,6 +410,130 @@
 
                 Label:
                     id: category4
+                    size_hint_y: None
+                    size_hint_x: None
+                    height: 49
+                    width: 700
+                    text: ""
+                    disabled: False
+                    opacity: 1
+                    halign: 'center'
+                    color: "white"
+                    bold: True,
+                    opacity: 0.9
+                    font_size: 16
+
+                BoxLayout:
+                    id: boxLayoutNewsCard4
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    size_hint_x: None
+                    height: self.minimum_height
+                    width: 700
+                    spacing: 0
+                    padding: 0
+                    opacity: 0
+                    disabled: False
+                    
+                    canvas.before:
+                        Color:
+                            rgba: hex('#0e1012') # FF0000 # 0, 0, 1, 1  # hex('#0e1012') # Blue
+                        Rectangle:
+                            pos: self.pos
+                            size: self.width, self.height #width, height
+                    Label:
+                        id: newsCard4Post
+                        size_hint_y: None
+                        size_hint_x: None
+                        text: ""
+                        padding: 40, 20 #left, top
+                        text_size: 660, 240 #width, height
+                        height: 240
+                        width: 640
+                        multiline: True
+                        disabled: False
+                        halign:'left'
+                        valign: 'top'
+                        color: 'white'
+                        opacity: 0.9
+                        font_size: 16
+                        disabled: False
+                        bold: True
+                        # height: self.texture_size[1]
+                        # size: self.texture_size
+                        # text_size: self.width, None
+                        # background_color: '#1DA1F2' # 292f33
+                    StackLayout:
+                        orientation: 'tb-lr'
+                        size_hint_y: 1
+                        size_hint_x: None
+                        width: 36
+                        spacing: 0
+                        padding: 0
+                        # padding: 0, 70 #left, top
+                        Label:
+                            id: buttonCopyLink
+                            size_hint_y: None
+                            size_hint_x: None
+                            height: 49
+                            width: 60
+                            text: "§"
+                            background_color: "#292f33"
+                            disabled: False
+                            opacity: 1
+                            on_touch_down: root.copyToClipboard(newsCard4Post.type) if self.collide_point(*args[1].pos) else False
+                            valign: 'top'
+                            color: "white"
+                            bold: True
+                            font_size: 16
+                        Label:
+                            id: buttonAddToFavs
+                            size_hint_y: None
+                            size_hint_x: None
+                            height: 40
+                            width: 60
+                            text: "+"
+                            background_color: "#292f33"
+                            disabled: False
+                            opacity: 1 
+                            on_touch_down: root.saveToFavorites(self, newsCard4Post.type) if self.collide_point(*args[1].pos) else False
+                            valign: 'top'
+                            color: "white"
+                            bold: True
+                            font_size: 19
+                        Label:
+                            id: buttonPreviousPost
+                            size_hint_y: None
+                            size_hint_x: None
+                            height: 40
+                            width: 60
+                            text: "<"
+                            background_color: "#292f33"
+                            disabled: False
+                            opacity: 1 
+                            on_touch_down: root.previousPost(newsCard4Post.order, newsCard4Post.type) if self.collide_point(*args[1].pos) else False
+                            valign: 'top'
+                            color: "white"
+                            bold: True
+                            font_size: 19
+                        Label:
+                            id: buttonNextPost
+                            size_hint_y: None
+                            size_hint_x: None
+                            height: 40
+                            width: 60
+                            text: ">"
+                            background_color: "#292f33"
+                            disabled: False
+                            opacity: 1 
+                            on_touch_down: root.nextPost(newsCard4Post.order, newsCard4Post.type) if self.collide_point(*args[1].pos) else False
+                            valign: 'top'
+                            color: "white"
+                            bold: True
+                            font_size: 19
+
+                Label:
+                    id: category5
                     size_hint_y: None
                     size_hint_x: None
                     height: 49
