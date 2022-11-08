@@ -48,7 +48,7 @@
                     halign: 'left'
                     color: "white"
                     bold: True,
-                    opacity: 0.9
+                    opacity: 1
                     font_size: 21
 
                 BoxLayout:
@@ -94,7 +94,7 @@
                         halign:'left'
                         valign: 'top'
                         color: 'white'
-                        opacity: 0.9
+                        opacity: 1
                         font_size: 16
                         disabled: False
                         bold: True
@@ -225,7 +225,7 @@
                     halign: 'center'
                     color: "white"
                     bold: True,
-                    opacity: 0.9
+                    opacity: 1
                     font_size: 16
 
                 BoxLayout:
@@ -315,7 +315,7 @@
                     halign: 'center'
                     color: "white"
                     bold: True,
-                    opacity: 0.9
+                    opacity: 1
                     font_size: 16
 
                 BoxLayout:
@@ -405,7 +405,7 @@
                     halign: 'center'
                     color: "white"
                     bold: True,
-                    opacity: 0.9
+                    opacity: 1
                     font_size: 16
 
 <AddProfileScreen>:
@@ -451,7 +451,8 @@
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
-                text: "Custom Profile"
+                text: "Create Custom Profile"
+                bold: True
             TextInput:
                 id: profileName
                 size_hint_y: None
@@ -486,7 +487,7 @@
                 height: 40
                 # width: 700
                 font_size: 20
-                hint_text: "search phrase for articles"
+                hint_text: "search phrase for news articles"
                 halign: "center"
             TextInput:
                 id: profileSubreddit
@@ -497,13 +498,6 @@
                 font_size: 20
                 hint_text: "subreddit"
                 halign: "center"
-            # TextInput:
-            #     id: profileFillter
-            #     size_hint_y: None
-            #     size_hint_x: None
-                # height: 40
-                # width: 700
-                # disabled: True
             Button:
                 size_hint_y: None
                 size_hint_x: 1
@@ -512,35 +506,6 @@
                 text: "Add"
                 background_color: 'lightgreen'
                 on_press: root.fetch_profile_inputs()
-            Label:
-                size_hint_y: None
-                size_hint_x: 1
-                height: 40
-                text: "Newssites"
-            Button:
-                size_hint_y: None
-                size_hint_x: 1
-                height: 40
-                # width: 700
-                text: "Add Newssite #1"
-                background_color: 'lightgreen'
-                on_press: 
-            Button:
-                size_hint_y: None
-                size_hint_x: 1
-                height: 40
-                # width: 700
-                text: "Add Newssite #2"
-                background_color: 'lightgreen'
-                on_press: 
-            Button:
-                size_hint_y: None
-                size_hint_x: 1
-                height: 40
-                # width: 700
-                text: "Add Newssite #3"
-                background_color: 'lightgreen'
-                on_press: 
 
 <EditProfileScreen>:
     bl2: testBoxLayout
@@ -579,11 +544,13 @@
             size_hint_y: 1
             size_hint_x: 1
 
-            # Label:
-            #     size_hint_y: None
-            #     size_hint_x: 1
-            #     height: 40
-            #     text: "Delete Profile"
+            Label:
+                id: labelTotalSavedProfiles
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                text: "0 Saved Profiles"
+                bold: True
             TextInput:
                 id: profileName
                 size_hint_y: None
@@ -607,7 +574,7 @@
                 effect_cls: 'ScrollEffect'
                 size_hint_y: None
                 size_hint_x: 1
-                height: 440 + 80
+                height: 580 # 440 + 80
 
                 BoxLayout:
                     id: testBoxLayout2
