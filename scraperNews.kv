@@ -26,8 +26,8 @@
 
         ScrollView:
             id: svScrollBar
-            # effect_cls: 'ScrollEffect'
-            
+            effect_cls: 'ScrollEffect'
+
             BoxLayout:
                 id: boxLayoutPost
                 orientation: 'vertical'
@@ -40,16 +40,16 @@
                     id: category1
                     size_hint_y: None
                     size_hint_x: None
-                    height: 49
+                    height: 100
                     width: 700
-                    text: ""
+                    text: "Welcome to ScraperNews\n # = Link to Post\n + = Save to Favorites"
                     disabled: False
                     opacity: 1
-                    halign: 'center'
+                    halign: 'left'
                     color: "white"
                     bold: True,
                     opacity: 0.9
-                    font_size: 16
+                    font_size: 21
 
                 BoxLayout:
                     id: boxLayoutNewsCard1
@@ -63,21 +63,31 @@
                     opacity: 0
                     disabled: False
                     
-                    #creating canvas
-                    canvas.before:
-                        Color:
-                            rgba: hex('#0e1012') # #1DA1F2 # 0, 0, 1, 1  # hex('#0e1012') # Blue
-                        Rectangle:
-                            pos: self.pos
-                            size: self.width, self.height #width, height
-                    Label:
+                    Button:
+                        id: buttonCopyLink1
+                        size_hint_y: 1
+                        size_hint_x: None
+                        height: 100
+                        width: 40
+                        text: "#"
+                        background_color: hex('#0e1012') # "white" # hex('#1DA1F2') # "darkgray" # "#292f33"
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1
+                        on_touch_down: root.copyToClipboard(newsCard1Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: False
+                        font_size: 16 
+                    Button:
                         id: newsCard1Post
                         size_hint_y: None
                         size_hint_x: None
                         text: ""
-                        padding: 40, 20 #left, top
-                        text_size: 660, 240 #width, height
-                        height: 240
+                        padding: 10, 20 #left, top
+                        text_size: self.width, None #width, height
+                        height: self.texture_size[1]
                         width: 640
                         multiline: True
                         disabled: False
@@ -88,77 +98,30 @@
                         font_size: 16
                         disabled: False
                         bold: True
+                        on_touch_down: root.nextPost(newsCard1Post.order, newsCard1Post.type) if self.collide_point(*args[1].pos) else False
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
                         # height: self.texture_size[1]
                         # text_size: self.width, None
                         # size: self.texture_size
-                    StackLayout:
-                        orientation: 'tb-lr'
+                    Button:
+                        id: buttonAddToFavs1
                         size_hint_y: 1
                         size_hint_x: None
-                        width: 36
-                        spacing: 0
-                        padding: 0
-                        # padding: 0, 70 #left, top
-                        Label:
-                            id: buttonCopyLink
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 49
-                            width: 60
-                            text: "§"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1
-                            on_touch_down: root.copyToClipboard(newsCard1Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 16
-                        Label:
-                            id: buttonAddToFavs
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: "+"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.saveToFavorites(self, newsCard1Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
-                        Label:
-                            id: buttonPreviousPost
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: "<"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.previousPost(newsCard1Post.order, newsCard1Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
-                        Label:
-                            id: buttonNextPost
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: ">"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.nextPost(newsCard1Post.order, newsCard1Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
+                        # height: 100
+                        width: 46
+                        text: "+"
+                        background_color: hex('#0e1012') # "green" # "#292f33"
+                        background_normal: "transparent" # "#292f33"
+                        background_down: "transparent" # "#292f33"
+                        disabled: False
+                        opacity: 1 
+                        on_touch_down: root.saveToFavorites(self, newsCard1Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: False
+                        font_size: 19
 
                 Label:
                     id: category2
@@ -187,102 +150,68 @@
                     opacity: 0
                     disabled: False
                     
-                    canvas.before:
-                        Color:
-                            rgba: hex('#0e1012') # FF0000 # 0, 0, 1, 1  # hex('#0e1012') # Blue
-                        Rectangle:
-                            pos: self.pos
-                            size: self.width, self.height #width, height
-                    Label:
+                    Button:
+                        id: buttonCopyLink2
+                        size_hint_y: 1
+                        size_hint_x: None
+                        height: 100
+                        width: 40
+                        text: "#"
+                        background_color: hex('#0e1012') # "white" # hex('#1DA1F2') # "darkgray" # "#292f33"
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1
+                        on_touch_down: root.copyToClipboard(newsCard2Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: True
+                        font_size: 16
+                    Button:
                         id: newsCard2Post
                         size_hint_y: None
                         size_hint_x: None
                         text: ""
-                        padding: 40, 20 #left, top
-                        text_size: 660, 240 #width, height
-                        height: 240
+                        padding: 10, 20 #left, top
+                        # text_size: 660, 240 #width, height
+                        # height: 240
+                        text_size: self.width, None #width, height
+                        height: self.texture_size[1]
                         width: 640
                         multiline: True
                         disabled: False
                         halign:'left'
                         valign: 'top'
                         color: 'white'
-                        opacity: 0.9
+                        opacity: 1
                         font_size: 16
                         disabled: False
                         bold: True
+                        on_touch_down: root.nextPost(newsCard2Post.order, newsCard2Post.type) if self.collide_point(*args[1].pos) else False
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
                         # height: self.texture_size[1]
                         # size: self.texture_size
                         # text_size: self.width, None
                         # background_color: '#1DA1F2' # 292f33
-                    StackLayout:
-                        orientation: 'tb-lr'
+                    Button:
+                        id: buttonAddToFavs2
                         size_hint_y: 1
                         size_hint_x: None
-                        width: 36
-                        spacing: 0
-                        padding: 0
-                        # padding: 0, 70 #left, top
-                        Label:
-                            id: buttonCopyLink
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 49
-                            width: 60
-                            text: "§"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1
-                            on_touch_down: root.copyToClipboard(newsCard2Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 16
-                        Label:
-                            id: buttonAddToFavs
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: "+"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.saveToFavorites(self, newsCard2Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
-                        Label:
-                            id: buttonPreviousPost
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: "<"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.previousPost(newsCard2Post.order, newsCard2Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
-                        Label:
-                            id: buttonNextPost
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: ">"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.nextPost(newsCard2Post.order, newsCard2Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
+                        # height: 40
+                        width: 46
+                        text: "+"
+                        background_color: hex('#0e1012') # "green" # "#292f33"
+                        background_normal: "transparent" # "#292f33"
+                        background_down: "transparent" # "#292f33"
+                        disabled: False
+                        opacity: 1 
+                        on_touch_down: root.saveToFavorites(self, newsCard2Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: True
+                        font_size: 19
 
                 Label:
                     id: category3
@@ -310,103 +239,69 @@
                     padding: 0
                     opacity: 0
                     disabled: False
-                    
-                    canvas.before:
-                        Color:
-                            rgba: hex('#0e1012') # FF0000 # 0, 0, 1, 1  # hex('#0e1012') # Blue
-                        Rectangle:
-                            pos: self.pos
-                            size: self.width, self.height #width, height
-                    Label:
+                                        
+                    Button:
+                        id: buttonCopyLink3
+                        size_hint_y: 1
+                        size_hint_x: None
+                        height: 100
+                        width: 40
+                        text: "#"
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1
+                        on_touch_down: root.copyToClipboard(newsCard3Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: True
+                        font_size: 16
+                    Button:
                         id: newsCard3Post
                         size_hint_y: None
                         size_hint_x: None
                         text: ""
-                        padding: 40, 20 #left, top
-                        text_size: 660, 240 #width, height
-                        height: 240
+                        padding: 10, 20 #left, top
+                        # text_size: 660, 240 #width, height
+                        # height: 240
+                        text_size: self.width, None #width, height
+                        height: self.texture_size[1]
                         width: 640
                         multiline: True
                         disabled: False
                         halign:'left'
                         valign: 'top'
                         color: 'white'
-                        opacity: 0.9
+                        opacity: 1
                         font_size: 16
                         disabled: False
                         bold: True
+                        on_touch_down: root.nextPost(newsCard3Post.order, newsCard3Post.type) if self.collide_point(*args[1].pos) else False
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
                         # height: self.texture_size[1]
                         # size: self.texture_size
                         # text_size: self.width, None
                         # background_color: '#1DA1F2' # 292f33
-                    StackLayout:
-                        orientation: 'tb-lr'
+                    Button:
+                        id: buttonAddToFavs3
                         size_hint_y: 1
                         size_hint_x: None
-                        width: 36
-                        spacing: 0
-                        padding: 0
-                        # padding: 0, 70 #left, top
-                        Label:
-                            id: buttonCopyLink
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 49
-                            width: 60
-                            text: "§"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1
-                            on_touch_down: root.copyToClipboard(newsCard3Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 16
-                        Label:
-                            id: buttonAddToFavs
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: "+"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.saveToFavorites(self, newsCard3Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
-                        Label:
-                            id: buttonPreviousPost
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: "<"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.previousPost(newsCard3Post.order, newsCard3Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
-                        Label:
-                            id: buttonNextPost
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: ">"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.nextPost(newsCard3Post.order, newsCard3Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
+                        # height: 40
+                        width: 46
+                        text: "+"
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1 
+                        on_touch_down: root.saveToFavorites(self, newsCard3Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: True
+                        font_size: 19
 
                 Label:
                     id: category4
@@ -434,103 +329,69 @@
                     padding: 0
                     opacity: 0
                     disabled: False
-                    
-                    canvas.before:
-                        Color:
-                            rgba: hex('#0e1012') # FF0000 # 0, 0, 1, 1  # hex('#0e1012') # Blue
-                        Rectangle:
-                            pos: self.pos
-                            size: self.width, self.height #width, height
-                    Label:
+
+                    Button:
+                        id: buttonCopyLink4
+                        size_hint_y: 1
+                        size_hint_x: None
+                        height: 100
+                        width: 40
+                        text: "#"
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1
+                        on_touch_down: root.copyToClipboard(newsCard4Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: True
+                        font_size: 16
+                    Button:
                         id: newsCard4Post
                         size_hint_y: None
                         size_hint_x: None
                         text: ""
-                        padding: 40, 20 #left, top
-                        text_size: 660, 240 #width, height
-                        height: 240
+                        padding: 10, 20 #left, top
+                        # text_size: 660, 240 #width, height
+                        # height: 240
+                        text_size: self.width, None #width, height
+                        height: self.texture_size[1]
                         width: 640
                         multiline: True
                         disabled: False
                         halign:'left'
                         valign: 'top'
                         color: 'white'
-                        opacity: 0.9
+                        opacity: 1
                         font_size: 16
                         disabled: False
                         bold: True
+                        on_touch_down: root.nextPost(newsCard4Post.order, newsCard4Post.type) if self.collide_point(*args[1].pos) else False
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
                         # height: self.texture_size[1]
                         # size: self.texture_size
                         # text_size: self.width, None
                         # background_color: '#1DA1F2' # 292f33
-                    StackLayout:
-                        orientation: 'tb-lr'
+                    Button:
+                        id: buttonAddToFavs4
                         size_hint_y: 1
                         size_hint_x: None
-                        width: 36
-                        spacing: 0
-                        padding: 0
-                        # padding: 0, 70 #left, top
-                        Label:
-                            id: buttonCopyLink
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 49
-                            width: 60
-                            text: "§"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1
-                            on_touch_down: root.copyToClipboard(newsCard4Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 16
-                        Label:
-                            id: buttonAddToFavs
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: "+"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.saveToFavorites(self, newsCard4Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
-                        Label:
-                            id: buttonPreviousPost
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: "<"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.previousPost(newsCard4Post.order, newsCard4Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
-                        Label:
-                            id: buttonNextPost
-                            size_hint_y: None
-                            size_hint_x: None
-                            height: 40
-                            width: 60
-                            text: ">"
-                            background_color: "#292f33"
-                            disabled: False
-                            opacity: 1 
-                            on_touch_down: root.nextPost(newsCard4Post.order, newsCard4Post.type) if self.collide_point(*args[1].pos) else False
-                            valign: 'top'
-                            color: "white"
-                            bold: True
-                            font_size: 19
+                        # height: 40
+                        width: 46
+                        text: "+"
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1 
+                        on_touch_down: root.saveToFavorites(self, newsCard4Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: True
+                        font_size: 19
 
                 Label:
                     id: category5
@@ -572,6 +433,7 @@
                 orientation: "vertical"
                 size_hint_y: None
                 height: self.minimum_height
+                
                 Button:
                     size_hint_y: None
                     text: "<"

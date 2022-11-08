@@ -55,52 +55,51 @@ savedNewsArticles = []
 savedSubredditPosts = []
 
 def displayNewsCard(self, id, username, type, platform, profileData):
-    #debugging
-    # print(type)
-    # print(profileData)
-    # print(platform)
-    
-    #check card pos
+    #check card id
     if id == 1: 
         cardObj = self.ids.newsCard1Post; 
         boxlayoutObj = self.ids.boxLayoutNewsCard1; 
         cardObj.order = 1
+        self.changeButtonColor(1, platform)
     elif id == 2: 
         cardObj = self.ids.newsCard2Post; 
         boxlayoutObj = self.ids.boxLayoutNewsCard2; 
         cardObj.order = 2
+        self.changeButtonColor(2, platform)
     elif id == 3: 
         cardObj = self.ids.newsCard3Post; 
         boxlayoutObj = self.ids.boxLayoutNewsCard3; 
         cardObj.order = 3
+        self.changeButtonColor(3, platform)
     elif id == 4: 
         cardObj = self.ids.newsCard4Post; 
         boxlayoutObj = self.ids.boxLayoutNewsCard4; 
         cardObj.order = 4
+        self.changeButtonColor(4, platform)
 
     #check platform
     if platform == "twitter": 
         cardObj.type = "twitter"
-        cardObj.text = "No posts found..."
+        cardObj.text = "Twitter · No posts found..."
     elif platform == "youtube": 
-        cardObj.text = "No posts found..."
+        cardObj.text = "YouTube · No posts found..."
         cardObj.type = "youtube"
     elif platform == "article": 
-        cardObj.text = "No posts found..."
+        cardObj.text = "Articles · No posts found..."
         cardObj.type = "article"
     elif platform == "subreddit": 
-        cardObj.text = "No posts found..."
+        cardObj.text = "Subreddit · No posts found..."
         cardObj.type = "subreddit"
     
     #check data
     if profileData != "null" and platform == "twitter":
-        cardObj.text = "Click arrows to start..."
+        cardObj.text = "Twitter · Click to start..."
     elif profileData != "null" and platform == "youtube":
-        cardObj.text = "Click arrows to start..."
+        cardObj.text = "YouTube · Click to start..."
     elif profileData != "null" and platform == "article":
-        cardObj.text = "Click arrows to start..."
+        cardObj.text = "Articles · Click to start..."
     elif profileData != "null" and platform == "subreddit":
-        cardObj.text = "Click arrows to start..."
+        cardObj.text = "Subreddit · Click to start..."
     
     #display card    
     boxlayoutObj.opacity = 1
@@ -108,18 +107,10 @@ def displayNewsCard(self, id, username, type, platform, profileData):
 
 
 def undisplayNewsCard(self, id):
-    if id == 1: 
-        self.ids.boxLayoutNewsCard1.opacity = 0
-        self.ids.category1.text = ""
-    elif id == 2: 
-        self.ids.boxLayoutNewsCard2.opacity = 0
-        self.ids.category2.text = ""
-    elif id == 3: 
-        self.ids.boxLayoutNewsCard3.opacity = 0
-        self.ids.category3.text = ""
-    elif id == 4: 
-        self.ids.boxLayoutNewsCard4.opacity = 0
-        self.ids.category4.text = ""
+    if id == 1: self.ids.boxLayoutNewsCard1.opacity = 0
+    elif id == 2: self.ids.boxLayoutNewsCard2.opacity = 0
+    elif id == 3: self.ids.boxLayoutNewsCard3.opacity = 0
+    elif id == 4: self.ids.boxLayoutNewsCard4.opacity = 0
 
 
 def fetch_youtube_channel(url, self, name):
@@ -211,7 +202,8 @@ def fetch_youtube_channel(url, self, name):
                 "user": str(name),
                 "title": str(formatYoutubeTitle),
                 "date": str(formatYoutubeUploadDate),
-                "link": str(formatYoutubeLink)
+                "link": str(formatYoutubeLink),
+                "type": "youtube"
             }
 
             #add post
@@ -555,7 +547,8 @@ def fetch_twitter_profile(username, self, name):
                     "youtube": youtube,
                     "poll": poll,
                     "images": images,
-                    "videos": videos
+                    "videos": videos,
+                    "type": "twitter"
                 }
                 savedTwitterPosts.append(post)
 
@@ -671,7 +664,8 @@ def fetch_news_articles(self, name):
                     "title": title,
                     "link": link,
                     "date": date,
-                    "user": user
+                    "user": user,
+                    "type": "article"
                 }
 
                 #add post obj
@@ -791,9 +785,6 @@ def add_profile(self, name, youtube = None, twitter = None, articles = None, sub
 
 
 def fetch_news_feed(profile, self):
-    #set loading text
-    self.ids.category1.text = "Loading..."
-
     #variables
     global counterTNS
     counterTNS = 0
@@ -817,10 +808,10 @@ def fetch_news_feed(profile, self):
     self.ids.newsCard4Post.text = ""
 
     #reset news card category
-    self.ids.category1.text = ""
-    self.ids.category2.text = ""
-    self.ids.category3.text = ""
-    self.ids.category4.text = ""
+    # self.ids.category1.text = ""
+    # self.ids.category2.text = ""
+    # self.ids.category3.text = ""
+    # self.ids.category4.text = ""
 
     #undisplay news card
     Thread(target=lambda : undisplayNewsCard(self, 1)).start()
@@ -829,7 +820,7 @@ def fetch_news_feed(profile, self):
     Thread(target=lambda : undisplayNewsCard(self, 4)).start()
 
     #set loading text
-    self.ids.category1.text = "Loading..."
+    self.ids.category1.text = name + " loading..."
 
     #fetch profile youtube data
     for p in profiles:
@@ -839,35 +830,36 @@ def fetch_news_feed(profile, self):
             if p['articles'] != "":
                 counterTNS += 1
                 fetch_news_articles(self, articles)
-                if counterTNS == 1: self.ids.category1.text = "Articles" + " · " + name
-                elif counterTNS == 2: self.ids.category2.text = "Articles" + " · " + name
-                elif counterTNS == 3: self.ids.category3.text = "Articles" + " · " + name
-                elif counterTNS == 4: self.ids.category4.text = "Articles" + " · " + name
+                # if counterTNS == 1: self.ids.category1.text = "Articles"
+                # elif counterTNS == 2: self.ids.category2.text = "Articles"
+                # elif counterTNS == 3: self.ids.category3.text = "Articles"
+                # elif counterTNS == 4: self.ids.category4.text = "Articles"
 
             if p['youtube'] != "":
                 counterTNS += 1
                 fetch_youtube_channel(p['youtube'], self, youtube)
-                if counterTNS == 1: self.ids.category1.text = "Youtube" + " · " + name # self.ids.category1.color = get_color_from_hex("#FF0000")
-                elif counterTNS == 2: self.ids.category2.text = "Youtube" + " · " + name
-                elif counterTNS == 3: self.ids.category3.text = "Youtube" + " · " + name
-                elif counterTNS == 4: self.ids.category4.text = "Youtube" + " · " + name
+                # if counterTNS == 1: self.ids.category1.text = "Youtube" # self.ids.category1.color = get_color_from_hex("#FF0000")
+                # elif counterTNS == 2: self.ids.category2.text = "Youtube"
+                # elif counterTNS == 3: self.ids.category3.text = "Youtube"
+                # elif counterTNS == 4: self.ids.category4.text = "Youtube"
 
             if p['twitter'] != "":
                 counterTNS += 1
                 fetch_twitter_profile(p['twitter'], self, twitter)
-                if counterTNS == 1: self.ids.category1.text = "Twitter" + " · " + name
-                elif counterTNS == 2: self.ids.category2.text = "Twitter" + " · " + name
-                elif counterTNS == 3: self.ids.category3.text = "Twitter" + " · " + name            
-                elif counterTNS == 4: self.ids.category4.text = "Twitter" + " · " + name            
+                # if counterTNS == 1: self.ids.category1.text = "Twitter"
+                # elif counterTNS == 2: self.ids.category2.text = "Twitter"
+                # elif counterTNS == 3: self.ids.category3.text = "Twitter"           
+                # elif counterTNS == 4: self.ids.category4.text = "Twitter"            
 
             if p['subreddit'] != "":
                 counterTNS += 1
                 fetch_subreddit(self, subreddit, p)
-                if counterTNS == 1: self.ids.category1.text = "Subreddit" + " · " + name
-                elif counterTNS == 2: self.ids.category2.text = "Subreddit" + " · " + name
-                elif counterTNS == 3: self.ids.category3.text = "Subreddit" + " · " + name            
-                elif counterTNS == 4: self.ids.category4.text = "Subreddit" + " · " + name            
+                # if counterTNS == 1: self.ids.category1.text = "Subreddit"
+                # elif counterTNS == 2: self.ids.category2.text = "Subreddit"
+                # elif counterTNS == 3: self.ids.category3.text = "Subreddit"            
+                # elif counterTNS == 4: self.ids.category4.text = "Subreddit"          
 
+            self.ids.category1.text = name
 
 def fetch_saved_profiles():
     #fetch profiles from profiles.json
@@ -1047,7 +1039,8 @@ def fetch_subreddit(self, name, profile):
                     "title": title,
                     "link": link,
                     "date": date,
-                    "user": profileName
+                    "user": profileName,
+                    "type": "subreddit"
                 }
 
                 #add obj post
@@ -1062,10 +1055,6 @@ def fetch_subreddit(self, name, profile):
         
         for p in savedSubredditPosts:
             print(p)        
-
-
-# def openNewsInWebBrowser(self, searchString):
-#     webbrowser.open_new('http://duckduckgo.com/?q=' + searchString)
 
 
 
@@ -1387,7 +1376,7 @@ class StartingScreen(Screen):
             background_color = get_color_from_hex('#0e1012'), 
             background_normal = 'transparent',
             background_down = 'transparent',
-            font_size = 19,
+            font_size = 30,
             color = 'lightgray',
             opacity = 0.9
             # height = 110,
@@ -1424,7 +1413,7 @@ class StartingScreen(Screen):
 
         #create news card
         btnNewsCard = Button(
-            text = "Saved " + savedAt + ": " + "\n" + platform + " · " + profile + " · " + date + "\n\n" + text,
+            text = "Saved " + savedAt + ": " + "\n\n" + platform + " · " + profile + " · " + date + "\n" + text,
             size_hint_y = None,
             size_hint_x = None,
             padding = (40, 40), #left, top
@@ -1436,13 +1425,37 @@ class StartingScreen(Screen):
             halign = 'left',
             valign = 'top',
             color = 'white',
-            background_color = get_color_from_hex("#0e1012"), # #292f33
+            background_color = "black", # #292f33
             background_normal = 'transparent',
             background_down = 'transparent',
             bold = True,
             font_size = 16,
             opacity = 0.9
-            )
+        )
+
+        #variables colors
+        colorTwitter = get_color_from_hex('#1DA1F2')
+        colorYoutube = get_color_from_hex('#FF0000')
+        colorArticle = get_color_from_hex('#0e1012')
+        colorSubreddit = get_color_from_hex('#ff4500')
+
+        #check platform
+        if platform == "Twitter":
+            btnNewsCard.background_color = colorTwitter
+            btn1.background_color = colorTwitter
+            btn2.background_color = colorTwitter
+        elif platform == "Youtube":
+            btnNewsCard.background_color = colorYoutube
+            btn1.background_color = colorYoutube
+            btn2.background_color = colorYoutube
+        elif platform == "Article":
+            btnNewsCard.background_color = colorArticle
+            btn1.background_color = colorArticle
+            btn2.background_color = colorArticle
+        elif platform == "Subreddit":
+            btnNewsCard.background_color = colorSubreddit
+            btn1.background_color = colorSubreddit
+            btn2.background_color = colorSubreddit
 
         #add widgets to boxlayout
         bl.add_widget(btnProfileImg)
@@ -1519,7 +1532,6 @@ class StartingScreen(Screen):
 
     
     def twitterNextPost(self, order):
-        print("twitterNextPost")
         #variables
         global counterSTP
         totalTwitterPosts = len(savedTwitterPosts)
@@ -1531,6 +1543,7 @@ class StartingScreen(Screen):
             #check counter
             if counterSTP == (len(savedTwitterPosts) - 1): 
                 counterSTP = -1
+                undisplayNewsCard(self, order)
             
             #increment counter
             counterSTP = counterSTP + 1; 
@@ -1543,109 +1556,49 @@ class StartingScreen(Screen):
             images = savedTwitterPosts[counterSTP]["images"]
             videos = savedTwitterPosts[counterSTP]["videos"]
             youtube = str(savedTwitterPosts[counterSTP]["youtube"])
-            cardText = id + " · " + date + "\n\n" + text + "\n"
+            cardText = "Twitter" + " · " + id + " · " + date + "\n\n" + text + "\n"
 
             #debugging
-            print("\n" + str(savedTwitterPosts[counterSTP]))
+            # print("\n" + str(savedTwitterPosts[counterSTP]))
 
-            
             #add links to card
-            count = 0
-            if images != "False": 
-                for img in images:
-                    count = count + 1
-                    img = img.replace("%3Fname%3Dsmall", "")
-                    cardText = cardText + "\n" + str(count) + ": " + "nitter.net/" + img
-            if videos != "False": 
-                count = count + 1
-                video = videos[0]
-                video = video.replace("https://", "")
-                video = video.replace("http://", "")
-                video = video.replace("http://", "")
-                video = video.replace("www.", "")
-                cardText = cardText + "\n" + str(count) + ": " + video
-            if youtube != "False": 
-                count = count + 1
-                youtube = youtube.replace("https://", "")
-                youtube = youtube.replace("http://", "")
-                youtube = youtube.replace("http://", "")
-                youtube = youtube.replace("www.", "")
-                cardText = cardText + "\n" + str(count) + ": " + youtube
+            # count = 0
+            # if images != "False": 
+            #     for img in images:
+            #         count = count + 1
+            #         img = img.replace("%3Fname%3Dsmall", "")
+            #         cardText = cardText + "\n" + str(count) + ": " + "nitter.net/" + img
+            # if videos != "False": 
+            #     count = count + 1
+            #     video = videos[0]
+            #     video = video.replace("https://", "")
+            #     video = video.replace("http://", "")
+            #     video = video.replace("http://", "")
+            #     video = video.replace("www.", "")
+            #     cardText = cardText + "\n" + str(count) + ": " + video
+            # if youtube != "False": 
+            #     count = count + 1
+            #     youtube = youtube.replace("https://", "")
+            #     youtube = youtube.replace("http://", "")
+            #     youtube = youtube.replace("http://", "")
+            #     youtube = youtube.replace("www.", "")
+            #     cardText = cardText + "\n" + str(count) + ": " + youtube
             
-            #update card text
-            if order == 1: card = self.ids.newsCard1Post
-            elif order == 2: card = self.ids.newsCard2Post
-            elif order == 3: card = self.ids.newsCard3Post
-            elif order == 4: card = self.ids.newsCard4Post
-
-            card.text = cardText
-        
-    
-    def twitterPreviousPost(self, order):
-        print("twitterPreviousPost")
-        #variables
-        global counterSTP
-        totalTwitterPosts = len(savedTwitterPosts)
-
-        if totalTwitterPosts == 0:
-            return
-
-        elif totalTwitterPosts > 0:
-            #check counter
-            if counterSTP == 0: 
-                counterSTP = len(savedTwitterPosts)
-
-            #decrement counter
-            if counterSTP != 0: 
-                counterSTP = counterSTP - 1
-
-            #debugging
-            print("\n" + str(savedTwitterPosts[counterSTP]))
-            
-            #set card
-            username = str(savedTwitterPosts[counterSTP]["username"])
-            id = str(savedTwitterPosts[counterSTP]["id"]) + "/" + str(len(savedTwitterPosts))
-            date = str(savedTwitterPosts[counterSTP]["date"])
-            text = str(savedTwitterPosts[counterSTP]["text"])
-            images = savedTwitterPosts[counterSTP]["images"]
-            videos = savedTwitterPosts[counterSTP]["videos"]
-            youtube = str(savedTwitterPosts[counterSTP]["youtube"])
-            cardText = id + " · " + date + "\n\n" + text + "\n"
-            
-            #add links to card
-            count = 0
-            if images != "False": 
-                for img in images:
-                    count = count + 1
-                    img = img.replace("%3Fname%3Dsmall", "")
-                    cardText = cardText + "\n" + str(count) + ": " + "nitter.net/" + img
-            if videos != "False": 
-                count = count + 1
-                video = videos[0]
-                video = video.replace("https://", "")
-                video = video.replace("http://", "")
-                video = video.replace("http://", "")
-                video = video.replace("www.", "")
-                cardText = cardText + "\n" + str(count) + ": " + video
-            if youtube != "False": 
-                count = count + 1
-                youtube = youtube.replace("https://", "")
-                youtube = youtube.replace("http://", "")
-                youtube = youtube.replace("http://", "")
-                youtube = youtube.replace("www.", "")
-                cardText = cardText + "\n" + str(count) + ": " + youtube
+            #check card order
+            if order == 1: 
+                card = self.ids.newsCard1Post
+            elif order == 2: 
+                card = self.ids.newsCard2Post
+            elif order == 3: 
+                card = self.ids.newsCard3Post
+            elif order == 4: 
+                card = self.ids.newsCard4Post
 
             #update card text
-            if order == 1: card = self.ids.newsCard1Post
-            elif order == 2: card = self.ids.newsCard2Post
-            elif order == 3: card = self.ids.newsCard3Post
-            elif order == 4: card = self.ids.newsCard4Post
-
             card.text = cardText
 
 
     def youtubeNextPost(self, order):
-        print("youtubeNextPost")
         #variables
         global counterSYP
         totalYoutubeVideos = len(savedYoutubePosts)
@@ -1657,50 +1610,26 @@ class StartingScreen(Screen):
             #check counter
             if counterSYP == (len(savedYoutubePosts) - 1): 
                 counterSYP = -1
+                undisplayNewsCard(self, order)
 
             #increment counter
             counterSYP = counterSYP + 1
 
             #debugging
-            print("\n" + str(savedYoutubePosts[counterSYP]))
+            # print("\n" + str(savedYoutubePosts[counterSYP]))
+
+            #check card order
+            if order == 1: 
+                card = self.ids.newsCard1Post
+            elif order == 2: 
+                card = self.ids.newsCard2Post
+            elif order == 3: 
+                card = self.ids.newsCard3Post
+            elif order == 4: 
+                card = self.ids.newsCard4Post
 
             #update card text
-            cardText = savedYoutubePosts[counterSYP]['id'] + "/" + str(totalYoutubeVideos) + " · " + savedYoutubePosts[counterSYP]['date'] + "\n\n" + savedYoutubePosts[counterSYP]['title']
-            
-            if order == 1: card = self.ids.newsCard1Post
-            elif order == 2: card = self.ids.newsCard2Post
-            elif order == 3: card = self.ids.newsCard3Post
-
-            card.text = cardText
-
-
-    def youtubePreviousPost(self, order):
-        #variables
-        global counterSYP
-        totalYoutubeVideos = len(savedYoutubePosts)
-
-        if totalYoutubeVideos == 0:
-            return
-
-        elif totalYoutubeVideos > 0:
-            #check counter
-            if counterSYP == 0: counterSYP = len(savedYoutubePosts)
-
-            #decrement counter
-            if counterSYP != 0: 
-                counterSYP = counterSYP - 1
-
-            #debugging
-            print("\n" + str(savedYoutubePosts[counterSYP]))
-
-            #update card text
-            cardText = savedYoutubePosts[counterSYP]['id'] + "/" + str(totalYoutubeVideos) + " · " + savedYoutubePosts[counterSYP]['date'] + "\n\n" + savedYoutubePosts[counterSYP]['title']
-            
-            if order == 1: card = self.ids.newsCard1Post
-            elif order == 2: card = self.ids.newsCard2Post
-            elif order == 3: card = self.ids.newsCard3Post
-            elif order == 4: card = self.ids.newsCard4Post
-
+            cardText = "YouTube" + " · " + savedYoutubePosts[counterSYP]['id'] + "/" + str(totalYoutubeVideos) + " · " + savedYoutubePosts[counterSYP]['date'] + "\n\n" + savedYoutubePosts[counterSYP]['title']
             card.text = cardText
 
 
@@ -1716,50 +1645,61 @@ class StartingScreen(Screen):
             #check counter
             if counterSNA == (len(savedNewsArticles) - 1): 
                 counterSNA = -1
+                undisplayNewsCard(self, order)
 
             #increment counter
             counterSNA = counterSNA + 1
 
             #debugging
-            print("\n" + str(savedNewsArticles[counterSNA]))
+            # print("\n" + str(savedNewsArticles[counterSNA]))
+
+            #check card order
+            if order == 1: 
+                card = self.ids.newsCard1Post
+            elif order == 2: 
+                card = self.ids.newsCard2Post
+            elif order == 3: 
+                card = self.ids.newsCard3Post
+            elif order == 4: 
+                card = self.ids.newsCard4Post
 
             #update card text
-            cardText = savedNewsArticles[counterSNA]['id'] + "/" + str(totalArticles) + " · " + savedNewsArticles[counterSNA]['date'] + "\n\n" + savedNewsArticles[counterSNA]['title']
-            
-            if order == 1: card = self.ids.newsCard1Post
-            elif order == 2: card = self.ids.newsCard2Post
-            elif order == 3: card = self.ids.newsCard3Post
-            elif order == 4: card = self.ids.newsCard4Post
-
+            cardText = "Article" + " · " + savedNewsArticles[counterSNA]['id'] + "/" + str(totalArticles) + " · " + savedNewsArticles[counterSNA]['date'] + "\n" + savedNewsArticles[counterSNA]['title']
             card.text = cardText
 
 
-    def articlePreviousPost(self, order):
+    def subredditNextPost(self, order):
         #variables
-        global counterSNA
-        totalArticles = len(savedNewsArticles)
+        global counterSSP
+        totalSubredditPosts = len(savedSubredditPosts)
 
-        if totalArticles == 0:
+        if totalSubredditPosts == 0:
             return
 
-        elif totalArticles > 0:
+        elif totalSubredditPosts > 0:
             #check counter
-            if counterSNA == 0: counterSNA = len(savedNewsArticles)
+            if counterSSP == (len(savedSubredditPosts) - 1): 
+                counterSSP = -1
+                undisplayNewsCard(self, order)
 
-            #decrement counter
-            if counterSNA != 0: 
-                counterSNA = counterSNA - 1
+            #increment counter
+            counterSSP = counterSSP + 1
 
             #debugging
-            print("\n" + str(savedNewsArticles[counterSNA]))
+            # print("\n" + str(savedSubredditPosts[counterSSP]))
+
+            #check card order
+            if order == 1: 
+                card = self.ids.newsCard1Post
+            elif order == 2: 
+                card = self.ids.newsCard2Post
+            elif order == 3: 
+                card = self.ids.newsCard3Post
+            elif order == 4: 
+                card = self.ids.newsCard4Post
 
             #update card text
-            cardText = savedNewsArticles[counterSNA]['id'] + "/" + str(totalArticles) + " · " + savedNewsArticles[counterSNA]['date'] + "\n\n" + savedNewsArticles[counterSNA]['title']
-            
-            if order == 1: card = self.ids.newsCard1Post
-            elif order == 2: card = self.ids.newsCard2Post
-            elif order == 3: card = self.ids.newsCard3Post
-
+            cardText = "Subreddit" + " · " + savedSubredditPosts[counterSSP]['id'] + "/" + str(totalSubredditPosts) + " · " + savedSubredditPosts[counterSSP]['date'] + "\n\n" + savedSubredditPosts[counterSSP]['title']
             card.text = cardText
 
 
@@ -1787,74 +1727,51 @@ class StartingScreen(Screen):
         elif type == "twitter": self.twitterNextPost(order)
         elif type == "article": self.articleNextPost(order)
         elif type == "subreddit": self.subredditNextPost(order)
-        
-
-    def previousPost(self, order, type):
-        if type == "youtube": self.youtubePreviousPost(order)
-        elif type == "twitter": self.twitterPreviousPost(order)
-        elif type == "article": self.articlePreviousPost(order)
-        elif type == "subreddit": self.subredditPreviousPost(order)
 
 
-    def subredditNextPost(self, order):
-        print("subredditNextPost")
-        #variables
-        global counterSSP
-        totalSubredditPosts = len(savedSubredditPosts)
-
-        if totalSubredditPosts == 0:
-            return
-
-        elif totalSubredditPosts > 0:
-            #check counter
-            if counterSSP == (len(savedSubredditPosts) - 1): 
-                counterSSP = -1
-
-            #increment counter
-            counterSSP = counterSSP + 1
-
-            #debugging
-            print("\n" + str(savedSubredditPosts[counterSSP]))
-
-            #update card text
-            cardText = savedSubredditPosts[counterSSP]['id'] + "/" + str(totalSubredditPosts) + " · " + savedSubredditPosts[counterSSP]['date'] + "\n\n" + savedSubredditPosts[counterSSP]['title']
-            
-            if order == 1: card = self.ids.newsCard1Post
-            elif order == 2: card = self.ids.newsCard2Post
-            elif order == 3: card = self.ids.newsCard3Post
-            elif order == 4: card = self.ids.newsCard4Post
-
-            card.text = cardText
+    def openNewsInWebBrowser(self, searchString):
+        webbrowser.open('http://duckduckgo.com/?q=' + "searchString")
 
 
-    def subredditPreviousPost(self, order):
-        #variables
-        global counterSSP
-        totalSubredditPosts = len(savedSubredditPosts)
+    def changeButtonColor(self, order, type):
+        colorTwitter = get_color_from_hex('#1DA1F2')
+        colorYoutube = get_color_from_hex('#FF0000')
+        colorArticle = get_color_from_hex('#0e1012')
+        colorSubreddit = get_color_from_hex('#ff4500')
 
-        if totalSubredditPosts == 0:
-            return
+        if order == 1:
+            card = self.ids.newsCard1Post
+            buttonFavorites = self.ids.buttonAddToFavs1
+            buttonLink = self.ids.buttonCopyLink1 
+        elif order == 2: 
+            card = self.ids.newsCard2Post
+            buttonFavorites = self.ids.buttonAddToFavs2
+            buttonLink = self.ids.buttonCopyLink2 
+        elif order == 3: 
+            card = self.ids.newsCard3Post
+            buttonFavorites = self.ids.buttonAddToFavs3
+            buttonLink = self.ids.buttonCopyLink3 
+        elif order == 4: 
+            card = self.ids.newsCard4Post
+            buttonFavorites = self.ids.buttonAddToFavs4
+            buttonLink = self.ids.buttonCopyLink4 
 
-        elif totalSubredditPosts > 0:
-            #check counter
-            if counterSSP == 0: counterSSP = len(savedSubredditPosts)
-
-            #decrement counter
-            if counterSSP != 0: 
-                counterSSP = counterSSP - 1
-
-            #debugging
-            print("\n" + str(savedSubredditPosts[counterSSP]))
-
-            #update card text
-            cardText = savedSubredditPosts[counterSSP]['id'] + "/" + str(totalSubredditPosts) + " · " + savedSubredditPosts[counterSSP]['date'] + "\n\n" + savedSubredditPosts[counterSSP]['title']
-            
-            if order == 1: card = self.ids.newsCard1Post
-            elif order == 2: card = self.ids.newsCard2Post
-            elif order == 3: card = self.ids.newsCard3Post
-            elif order == 4: card = self.ids.newsCard4Post
-
-            card.text = cardText
+        if type == "twitter":
+            card.background_color = colorTwitter
+            buttonFavorites.background_color =  colorTwitter
+            buttonLink.background_color =  colorTwitter
+        elif type == "youtube":
+            card.background_color = colorYoutube
+            buttonFavorites.background_color = colorYoutube
+            buttonLink.background_color = colorYoutube
+        elif type == "article":
+            card.background_color = colorArticle
+            buttonFavorites.background_color = colorArticle
+            buttonLink.background_color = colorArticle
+        elif type == "subreddit":
+            card.background_color = colorSubreddit
+            buttonFavorites.background_color = colorSubreddit
+            buttonLink.background_color = colorSubreddit
 
 
 
