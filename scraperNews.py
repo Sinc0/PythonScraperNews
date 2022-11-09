@@ -27,7 +27,7 @@ from kivy.lang import Builder
 from kivy.core.window import Window
 from kivy.graphics import Rectangle, Color
 from kivy.uix.image import Image, AsyncImage
-from StartingScreen import StartingScreen
+from NewsFeedScreen import NewsFeedScreen
 from AddProfileScreen import AddProfileScreen
 from EditProfileScreen import EditProfileScreen
 from FavoritesScreen import FavoritesScreen
@@ -100,7 +100,7 @@ class scraperNewsApp(App): #the Base Class of our Kivy App
         #set screen manager configs
         sm = ScreenManager()
         sm = ScreenManager(transition=NoTransition())
-        sm.add_widget(StartingScreen(name='start'))
+        sm.add_widget(NewsFeedScreen(name='start'))
         sm.add_widget(AddProfileScreen(name='add'))    
         sm.add_widget(EditProfileScreen(name='edit'))    
         sm.add_widget(FavoritesScreen(name='favorites'))  

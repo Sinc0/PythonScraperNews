@@ -18,7 +18,7 @@ class EditProfileScreen(Screen):
         print("EditProfileScreen")
 
         #clear saved profile list
-        self.ids.testBoxLayout2.clear_widgets()
+        self.ids.boxLayout2.clear_widgets()
         
         #fetch saved profiles
         savedProfiles = fetch_saved_profiles()
@@ -27,12 +27,12 @@ class EditProfileScreen(Screen):
         totalSavedProfiles = len(savedProfiles)
 
         #set layout buttons count
-        totalButtons = len(self.ids.testBoxLayout2.children)
+        totalButtons = len(self.ids.boxLayout2.children)
 
         #add saved profiles buttons
         if totalButtons != totalSavedProfiles:
             #clear widgets
-            self.ids.testBoxLayout2.clear_widgets()
+            self.ids.boxLayout2.clear_widgets()
 
             #add buttons
             for x in range(totalSavedProfiles):
@@ -44,7 +44,7 @@ class EditProfileScreen(Screen):
         
         #fill side panel with filler buttons
         # for x in range(6):
-        #     StartingScreen.AddFillerButtons(self)
+            # NewsFeedScreen.AddFillerButtons(self)
 
 
     def AddProfileButtons(self, profile):
@@ -60,7 +60,7 @@ class EditProfileScreen(Screen):
         newButton.bind(on_press=lambda *args: EditProfileScreen.FillTextInputWithData(self, profile))
 
         #add button layout
-        self.ids.testBoxLayout2.add_widget(newButton)
+        self.ids.boxLayout2.add_widget(newButton)
 
 
     def DeleteProfile(self):

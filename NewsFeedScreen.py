@@ -131,8 +131,10 @@ def fetch_news_articles(self, name):
             #create post obj
             for obj in regexTitle[0:numberOfArticlesLimit]:
                 title = str(obj)
-                title = title.replace("&#8216;", "").replace("&#8217;", "").replace("</div></h3>", "")
-                title = title.replace(" ...", "...")
+                title = title.replace(" ...", "...").replace("</div></h3>", "")
+                title = title.replace("&#8216;", "").replace("&#8217;", "").replace("&#8218;", "")
+                title = title.replace("&#8211;", "").replace("&#8212;", "")
+                title = title.replace("&#8220;", "").replace("&#8221;", "")
 
                 link = regexLink[count]
                 link = link.replace("<a href=\"/url?q=", "")
@@ -159,6 +161,11 @@ def fetch_news_articles(self, name):
                 #update news card content       
                 counterSNA = -1
                 Thread(target=lambda : displayNewsCard(self, counterTNS, name, "null", "article", None)).start() #display card
+    else:
+        print("0 articles found for: " + name)
+        Thread(target=lambda : displayNewsCard(self, counterTNS, name, "default", "articles", "null")).start() #display card
+        print("news articles fetch failed")
+        return
 
 
 def fetch_youtube_channel(url, self, name):
@@ -190,76 +197,79 @@ def fetch_youtube_channel(url, self, name):
 
         #encode text
         requestResultText = requestResultText.encode('ascii', 'ignore')
+
+        #create txt file
+        # with open("Output.txt", "w") as text_file:
+        #     text_file.write(str(requestResultText))
+        # return
+
+        #regex youtube video data
+        requestResultText = str(requestResultText)
+        requestResultText = str(requestResultText).replace("\\u0026", "&")
+        regexYoutubeVideos = re.findall(r"\"title\":{\"runs\":\[{\"text\":\"[\w\d\s;:!&#$%€&,.\"?+*=\\/()}{´`¨'@£¤\-_|<>^¨]*\"}],\"a", requestResultText)
+        regexYoutubeLink = re.findall(r'{\"url\":\"/watch\?v=[\w\d\-_\\/#+?&]*.', requestResultText)
+        regexYoutubeUploadDate = re.findall(r'{\"simpleText\":\"[\w\d\s]*ago\"}', requestResultText)
+        
+        #debugging
+        print(str(len(regexYoutubeVideos)))
+        print(str(len(regexYoutubeLink)))
+        print(str(len(regexYoutubeUploadDate)))
+        
+        #variables
+        totalYoutubeVideos = len(regexYoutubeVideos)
+        
+        #null check
+        if totalYoutubeVideos == 0:
+            print("0 youtube posts found for: " + name)
+            Thread(target=lambda : displayNewsCard(self, counterTNS, name, "default", "youtube", "null")).start() #display card
+            return
+        
+        #sort video info
+        elif totalYoutubeVideos > 0:
+            if len(regexYoutubeVideos) < 10: numberOfVideosLimit = len(regexYoutubeVideos)
+
+            for videoTitle in regexYoutubeVideos[0: numberOfVideosLimit]:
+                #variables
+                youtubeVideoCounter += 1
+                youtubeTotalVideos = str(len(regexYoutubeVideos))
+
+                #format title
+                regexYoutubeTitle = re.findall(r'"text":"[^.]*"}],"', videoTitle)
+                formatYoutubeTitle = str(regexYoutubeTitle)
+                formatYoutubeTitle = formatYoutubeTitle.replace("\"}],\"']", "").replace("['\"text\":\"", "")
+                formatYoutubeTitle = formatYoutubeTitle.replace("\\\\\"", "").replace("\\\\", "").replace("\\", "")
+                formatYoutubeTitle = formatYoutubeTitle.replace("   ", " ").replace("  ", " ")
+
+                #format date
+                formatYoutubeUploadDate = str(regexYoutubeUploadDate[youtubeVideoCounter - 1])
+                formatYoutubeUploadDate = formatYoutubeUploadDate.replace('{"simpleText":"', "").replace('\"}', "")
+                
+                #format link
+                formatYoutubeLink = str(regexYoutubeLink[youtubeVideoCounter - 1])
+                formatYoutubeLink = formatYoutubeLink.replace("{\"url\":\"", "").replace("\"", "")
+                formatYoutubeLink = "https://www.youtube.com" + formatYoutubeLink # piped.kavin.rocks/
+
+                #create post obj
+                post = {
+                    "id": str(youtubeVideoCounter),
+                    "user": str(name),
+                    "title": str(formatYoutubeTitle),
+                    "date": str(formatYoutubeUploadDate),
+                    "link": str(formatYoutubeLink),
+                    "type": "youtube"
+                }
+
+                #add post
+                savedYoutubePosts.append(post)
+
+            #update news card content       
+            counterSYP = -1
+            Thread(target=lambda : displayNewsCard(self, counterTNS, name, "null", "youtube", savedYoutubePosts[0])).start() #display car
     else:
-        print("youtube channel fetch failed")
-
-    #create txt file
-    # with open("Output.txt", "w") as text_file:
-    #     text_file.write(str(requestResultText))
-    # return
-
-    #regex youtube video data
-    requestResultText = str(requestResultText)
-    requestResultText = str(requestResultText).replace("\\u0026", "&")
-    regexYoutubeVideos = re.findall(r"\"title\":{\"runs\":\[{\"text\":\"[\w\d\s;:!&#$%€&,.\"?+*=\\/()}{´`¨'@£¤\-_|<>^¨]*\"}],\"a", requestResultText)
-    regexYoutubeLink = re.findall(r'{\"url\":\"/watch\?v=[\w\d\-_\\/#+?&]*.', requestResultText)
-    regexYoutubeUploadDate = re.findall(r'{\"simpleText\":\"[\w\d\s]*ago\"}', requestResultText)
-    
-    #debugging
-    print(str(len(regexYoutubeVideos)))
-    print(str(len(regexYoutubeLink)))
-    print(str(len(regexYoutubeUploadDate)))
-    
-    #variables
-    totalYoutubeVideos = len(regexYoutubeVideos)
-    
-    #null check
-    if totalYoutubeVideos == 0:
         print("0 youtube posts found for: " + name)
         Thread(target=lambda : displayNewsCard(self, counterTNS, name, "default", "youtube", "null")).start() #display card
+        print("youtube channel fetch failed")
         return
-    
-    #sort video info
-    elif totalYoutubeVideos > 0:
-        if len(regexYoutubeVideos) < 10: numberOfVideosLimit = len(regexYoutubeVideos)
-
-        for videoTitle in regexYoutubeVideos[0: numberOfVideosLimit]:
-            #variables
-            youtubeVideoCounter += 1
-            youtubeTotalVideos = str(len(regexYoutubeVideos))
-
-            #format title
-            regexYoutubeTitle = re.findall(r'"text":"[^.]*"}],"', videoTitle)
-            formatYoutubeTitle = str(regexYoutubeTitle)
-            formatYoutubeTitle = formatYoutubeTitle.replace("\"}],\"']", "").replace("['\"text\":\"", "")
-            formatYoutubeTitle = formatYoutubeTitle.replace("\\\\\"", "").replace("\\\\", "").replace("\\", "")
-            formatYoutubeTitle = formatYoutubeTitle.replace("   ", " ").replace("  ", " ")
-
-            #format date
-            formatYoutubeUploadDate = str(regexYoutubeUploadDate[youtubeVideoCounter - 1])
-            formatYoutubeUploadDate = formatYoutubeUploadDate.replace('{"simpleText":"', "").replace('\"}', "")
-            
-            #format link
-            formatYoutubeLink = str(regexYoutubeLink[youtubeVideoCounter - 1])
-            formatYoutubeLink = formatYoutubeLink.replace("{\"url\":\"", "").replace("\"", "")
-            formatYoutubeLink = "https://www.youtube.com" + formatYoutubeLink # piped.kavin.rocks/
-
-            #create post obj
-            post = {
-                "id": str(youtubeVideoCounter),
-                "user": str(name),
-                "title": str(formatYoutubeTitle),
-                "date": str(formatYoutubeUploadDate),
-                "link": str(formatYoutubeLink),
-                "type": "youtube"
-            }
-
-            #add post
-            savedYoutubePosts.append(post)
-
-        #update news card content       
-        counterSYP = -1
-        Thread(target=lambda : displayNewsCard(self, counterTNS, name, "null", "youtube", savedYoutubePosts[0])).start() #display car
 
 
 def fetch_twitter_profile(username, self, name):
@@ -339,7 +349,6 @@ def fetch_twitter_profile(username, self, name):
         #null check
         if len(savedTwitterPosts) == 0:
             print("0 twitter posts found for: " + name)
-
             Thread(target=lambda : displayNewsCard(self, counterTNS, name, "default", "twitter", "null")).start() #display card
             return
 
@@ -382,6 +391,11 @@ def fetch_twitter_profile(username, self, name):
             counterSTP = -1
             savedTwitterPosts = savedTwitterPosts[0:numberOfTweetsLimit]
             Thread(target=lambda : displayNewsCard(self, counterTNS, name, "null", "twitter", savedTwitterPosts[0])).start() #display card
+    else:
+        print("0 twitter posts found for: " + name)
+        Thread(target=lambda : displayNewsCard(self, counterTNS, name, "default", "twitter", "null")).start() #display card
+        print("twitter profile fetch failed")
+        return
 
 
 def fetch_subreddit(self, name, profile):
@@ -478,17 +492,21 @@ def fetch_subreddit(self, name, profile):
         
         for p in savedSubredditPosts:
             print(p)        
-
+    else:
+        print("0 subreddit posts found for: " + name)
+        Thread(target=lambda : displayNewsCard(self, counterTNS, name, "default", "subreddit", "null")).start() #display card
+        print("subreddit fetch failed")
+        return
 
 
 ### code ###
-class StartingScreen(Screen):
+class NewsFeedScreen(Screen):
     def __init__(self, **var_args):
-        super(StartingScreen, self).__init__(**var_args)
+        super(NewsFeedScreen, self).__init__(**var_args)
 
 
     def on_pre_enter(self, *args):
-        print("StartingScreen")
+        print("NewsFeedScreen")
         
         #fetch saved profiles
         savedProfiles = fetch_saved_profiles()
@@ -562,7 +580,7 @@ class StartingScreen(Screen):
 
         #add profile sidemenu buttons
         for p in savedProfiles[::-1]:
-            StartingScreen.AddProfileButtons(self, p, totalSavedProfiles)
+            NewsFeedScreen.AddProfileButtons(self, p, totalSavedProfiles)
             
 
     def printNewsFeed(self, profile, selfObj):
@@ -818,8 +836,8 @@ class StartingScreen(Screen):
         )
         
         #bind functions to buttons
-        btn1.bind(on_press=lambda *args: StartingScreen.removeFromFavorites(self, id))
-        btn2.bind(on_press=lambda *args: StartingScreen.copyToClipboard(self, link))
+        btn1.bind(on_press=lambda *args: NewsFeedScreen.removeFromFavorites(self, id))
+        btn2.bind(on_press=lambda *args: NewsFeedScreen.copyToClipboard(self, link))
 
         #create news card
         btnNewsCard = Button(

@@ -1,7 +1,7 @@
 ### imports ###
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.label import Label
-from StartingScreen import StartingScreen
+from NewsFeedScreen import NewsFeedScreen
 from StandaloneFunctions import fetch_saved_profiles
 from StandaloneFunctions import fetch_saved_favorites
 
@@ -35,7 +35,7 @@ class FavoritesScreen(Screen):
 
         #fill side panel with buttons
         # for x in range(6):
-        #     StartingScreen.AddFillerButtons(self)
+            # NewsFeedScreen.AddFillerButtons(self)
 
         #create labels
         lbl1 = Label(size_hint_y = None, size_hint_x = 1, height = 10, text = "")
@@ -47,6 +47,6 @@ class FavoritesScreen(Screen):
         self.ids.boxLayoutPost.add_widget(lbl2)
         for fav in favorites[::-1]:
             if totalButtons < totalFavorites:
-                bl = StartingScreen.createNewsCard(self, fav)
+                bl = NewsFeedScreen.createNewsCard(self, fav)
                 self.ids.boxLayoutPost.add_widget(bl)
         self.ids.boxLayoutPost.add_widget(lbl3)

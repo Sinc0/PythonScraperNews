@@ -1,8 +1,8 @@
 #:kivy 2.1.0
 #:import hex kivy.utils.get_color_from_hex
 
-<StartingScreen>:
-    bl1: testBoxLayout
+<NewsFeedScreen>:
+    bl1: boxLayout1
 
     GridLayout:
         cols: 2
@@ -18,7 +18,7 @@
             width: 100
             
             BoxLayout:
-                id: testBoxLayout
+                id: boxLayout1
                 orientation: "vertical"
                 size_hint_y: None
                 height: self.minimum_height
@@ -409,7 +409,7 @@
                     font_size: 16
 
 <AddProfileScreen>:
-    bl2: testBoxLayout
+    bl1: boxLayout1
     ti1: profileName
     ti2: profileYoutube
     ti3: profileTwitter
@@ -429,7 +429,7 @@
             width: 100
 
             BoxLayout:
-                id: testBoxLayout
+                id: boxLayout1
                 orientation: "vertical"
                 size_hint_y: None
                 height: self.minimum_height
@@ -510,8 +510,8 @@
                 on_press: root.fetch_profile_inputs()
 
 <EditProfileScreen>:
-    bl2: testBoxLayout
-    bl3: testBoxLayout2
+    bl1: boxLayout1
+    bl2: boxLayout2
     st1: testStackLayout1
     ti1: profileName
     
@@ -528,7 +528,7 @@
             width: 100
 
             BoxLayout:
-                id: testBoxLayout
+                id: boxLayout1
                 orientation: "vertical"
                 size_hint_y: None
                 height: self.minimum_height
@@ -559,7 +559,7 @@
                 size_hint_x: 1
                 height: 40
                 font_size: 20
-                hint_text: "Select Profile"
+                hint_text: "select profile"
                 halign: "center"
                 disabled: True,
 
@@ -579,7 +579,7 @@
                 height: 580 # 440 + 80
 
                 BoxLayout:
-                    id: testBoxLayout2
+                    id: boxLayout2
                     orientation: 'vertical'
                     size_hint_y: None
                     height: self.minimum_height
@@ -595,7 +595,7 @@
                 on_press: root.DeleteProfile()
 
 <FavoritesScreen>:
-    bl2: testBoxLayout
+    bl1: boxLayout1
     
     GridLayout:
         cols: 2
@@ -610,7 +610,7 @@
             width: 100
 
             BoxLayout:
-                id: testBoxLayout
+                id: boxLayout1
                 orientation: "vertical"
                 size_hint_y: None
                 height: self.minimum_height
