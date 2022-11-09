@@ -1,25 +1,14 @@
+### imports ###
 import json
 import os
-
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.button import Button
-
-# from StandaloneFunctions import fetch_news_feed
 from StandaloneFunctions import fetch_saved_profiles
-# from StandaloneFunctions import fetch_saved_favorites
-# from StandaloneFunctions import fetch_profile_image
-# from StandaloneFunctions import fetch_twitter_profile
-# from StandaloneFunctions import fetch_news_articles
-# from StandaloneFunctions import fetch_youtube_channel
-# from StandaloneFunctions import fetch_subreddit
-# from StandaloneFunctions import displayNewsCard
-# from StandaloneFunctions import undisplayNewsCard
-# from StandaloneFunctions import nitterFilterPost
-# from StandaloneFunctions import year_progress
-# from StandaloneFunctions import add_profile
-# from StandaloneFunctions import changeScreen
 from StandaloneFunctions import refreshScreen
+from kivy.utils import get_color_from_hex
 
+
+### class ###
 class EditProfileScreen(Screen):
     def __init__(self, **var_args):
         super(EditProfileScreen, self).__init__(**var_args)
@@ -63,7 +52,8 @@ class EditProfileScreen(Screen):
         newButton = Button(
             size_hint_y = None,
             height = 40,
-            text = profile['name']
+            text = profile['name'],
+            background_color = get_color_from_hex("#292f33")
         )
 
         #add functions to buttons

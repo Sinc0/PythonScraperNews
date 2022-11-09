@@ -451,7 +451,7 @@
                 size_hint_y: None
                 size_hint_x: 1
                 height: 40
-                text: "Create Custom Profile"
+                text: "Custom Profile"
                 bold: True
             TextInput:
                 id: profileName
@@ -460,7 +460,7 @@
                 height: 40
                 # width: 700
                 font_size: 20
-                hint_text: "profile name"
+                hint_text: "desired profile name"
                 halign: "center"
             TextInput:
                 id: profileYoutube
@@ -469,7 +469,7 @@
                 height: 40
                 # width: 700
                 font_size: 20
-                hint_text: "youtube channel"
+                hint_text: "youtube channel name"
                 halign: "center"
             TextInput:
                 id: profileTwitter
@@ -496,7 +496,7 @@
                 height: 40
                 # width: 700
                 font_size: 20
-                hint_text: "subreddit"
+                hint_text: "subreddit name"
                 halign: "center"
             Button:
                 size_hint_y: None
@@ -504,7 +504,9 @@
                 height: 40
                 # width: 700
                 text: "Add"
-                background_color: 'lightgreen'
+                background_color: 'green'
+                background_normal: 'transparent'
+                background_down: 'transparent'
                 on_press: root.fetch_profile_inputs()
 
 <EditProfileScreen>:
@@ -559,7 +561,7 @@
                 font_size: 20
                 hint_text: "Select Profile"
                 halign: "center"
-                disabled: True
+                disabled: True,
 
             # Label:
             #     size_hint_y: None
@@ -587,6 +589,8 @@
                 size_hint_x: 1
                 height: 40
                 background_color: 'red'
+                background_normal: 'transparent'
+                background_down: 'transparent'
                 text: "Remove"
                 on_press: root.DeleteProfile()
 

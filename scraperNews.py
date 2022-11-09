@@ -1,4 +1,4 @@
-######### imports ######
+### imports ###
 import requests
 import re
 import time
@@ -12,7 +12,6 @@ import pyclip
 from threading import Thread
 from functools import partial
 from bs4 import BeautifulSoup
-
 import kivy
 from kivy.app import App
 from kivy.uix.label import Label
@@ -28,37 +27,28 @@ from kivy.lang import Builder
 from kivy.core.window import Window
 from kivy.graphics import Rectangle, Color
 from kivy.uix.image import Image, AsyncImage
-
 from StartingScreen import StartingScreen
 from AddProfileScreen import AddProfileScreen
 from EditProfileScreen import EditProfileScreen
 from FavoritesScreen import FavoritesScreen
 from BlankScreen import BlankScreen
-
-# from StandaloneFunctions import fetch_news_feed
 from StandaloneFunctions import fetch_saved_profiles
 from StandaloneFunctions import fetch_saved_favorites
-# from StandaloneFunctions import fetch_profile_image
-# from StandaloneFunctions import fetch_twitter_profile
-# from StandaloneFunctions import fetch_news_articles
-# from StandaloneFunctions import fetch_youtube_channel
-# from StandaloneFunctions import fetch_subreddit
-# from StandaloneFunctions import displayNewsCard
-# from StandaloneFunctions import undisplayNewsCard
-# from StandaloneFunctions import nitterFilterPost
 from StandaloneFunctions import year_progress
 from StandaloneFunctions import add_profile
-# from StandaloneFunctions import changeScreen
 from StandaloneFunctions import refreshScreen
 
-###### code ######
+
+
+### code ###
 kivy.require('2.0.0')
 
 #load kv file or string
 Builder.load_file("scraperNews.kv")
 # Builder.load_string("""""")
 
-#set kivy window settings
+#set kivy settings
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand') #removes right click display red dot
 Config.set('graphics', 'resizable', '1') #changing this might break display resolution
 Config.set('graphics', 'fullscreen', '0') #changing this might break display resolution
 Config.write()
@@ -77,7 +67,9 @@ savedYoutubePosts = []
 savedNewsArticles = []
 savedSubredditPosts = []
 
-###### kivy ######
+
+
+### class ###
 class scraperNewsApp(App): #the Base Class of our Kivy App
     def build(self):
         #check if exists
@@ -118,6 +110,6 @@ class scraperNewsApp(App): #the Base Class of our Kivy App
 
 
 
-###### start app ######
+### start app ###
 if __name__ == '__main__':
     scraperNewsApp().run()

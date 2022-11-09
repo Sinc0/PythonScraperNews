@@ -1,3 +1,4 @@
+### imports ###
 import datetime
 import json
 import requests
@@ -9,6 +10,8 @@ import os
 import webbrowser
 import pyclip
 
+
+### functions ###
 def displayNewsCard(self, id, username, type, platform, profileData):
     #check card id
     if id == 1: 
@@ -637,26 +640,22 @@ def fetch_news_articles(self, name):
 def year_progress():
     #variables
     JAN = 31
-    FEB = 31 + 28
-    MAR = 31 + 28 + 31
-    APR = 31 + 28 + 31 + 30
-    MAY = 31 + 28 + 31 + 30 + 31
-    JUN = 31 + 28 + 31 + 30 + 31 + 30
-    JUL = 31 + 28 + 31 + 30 + 31 + 30 + 31
-    AUG = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31
-    SEP = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30
-    OCT = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31
-    NOV = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30
-    DEC = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31
+    FEB = JAN + 28
+    MAR = FEB + 31
+    APR = MAR + 30
+    MAY = APR + 31
+    JUN = MAY + 30
+    JUL = JUN + 31
+    AUG = JUL + 31
+    SEP = AUG + 30
+    OCT = SEP + 31
+    NOV = OCT + 30
+    DEC = NOV + 31
     totalDaysThisYear = 365
 
-    #set current year
+    #set current dates
     year = datetime.datetime.now().year
-
-    #set current month
     month = datetime.datetime.now().month
-
-    #set current day
     day = datetime.datetime.now().day
 
     #check if leap year
@@ -676,12 +675,8 @@ def year_progress():
     elif month == 11: month = "Nov"; dayOfTheYear = OCT + day 
     elif month == 12: month = "Dec"; dayOfTheYear = NOV + day 
             
-    #set percentage of year
-    percentageOfYear = dayOfTheYear / totalDaysThisYear
-    
     #set formatted date
-    formattedDate = str(month) + " " + str(day) + " " + str(year)
-    # formattedDate = str(month) + " " + str(day) + " " + str(year) + " - " + str(dayOfTheYear) + "/" + str(totalDaysThisYear) + " - " + str(percentageOfYear)[2:4] + "%"
+    formattedDate = str(month) + " " + str(day) + " " + str(year) + " · " + str(dayOfTheYear) + "/" + str(totalDaysThisYear)
     
     return formattedDate
 

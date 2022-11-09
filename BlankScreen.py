@@ -1,5 +1,8 @@
+### imports ###
 from kivy.uix.screenmanager import ScreenManager, Screen
 
+
+### class ###
 class BlankScreen(Screen):
     def __init__(self, **var_args):
         super(BlankScreen, self).__init__(**var_args)

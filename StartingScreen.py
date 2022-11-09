@@ -1,3 +1,4 @@
+### imports ###
 import datetime
 import json
 import requests
@@ -8,16 +9,13 @@ import time
 import os
 import webbrowser
 import pyclip
-
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.utils import get_color_from_hex
 from kivy.uix.button import Button
 from threading import Thread
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.stacklayout import StackLayout
-
 from bs4 import BeautifulSoup
-
 from StandaloneFunctions import fetch_saved_profiles
 from StandaloneFunctions import displayNewsCard
 from StandaloneFunctions import undisplayNewsCard
@@ -26,6 +24,8 @@ from StandaloneFunctions import changeScreen
 from StandaloneFunctions import refreshScreen
 
 
+
+### functions ###
 def fetch_news_feed(profile, self):
     #variables
     global counterTNS
@@ -62,17 +62,25 @@ def fetch_news_feed(profile, self):
     Thread(target=lambda : undisplayNewsCard(self, 4)).start()
 
     #set loading text
-    self.ids.category1.text = name + " loading..."
+    # self.ids.category1.text = name + " loading..."
 
     #fetch profile youtube data
     for p in profiles:
         if p['name'] == name: 
             print(p['name'])
 
-            if p['youtube'] != "": counterTNS += 1; fetch_youtube_channel(p['youtube'], self, youtube)
-            if p['twitter'] != "": counterTNS += 1; fetch_twitter_profile(p['twitter'], self, twitter)
-            if p['subreddit'] != "": counterTNS += 1; fetch_subreddit(self, subreddit, p)
-            if p['articles'] != "": counterTNS += 1; fetch_news_articles(self, articles)
+            if p['youtube'] != "": 
+                self.ids.category1.text = name + " loading YouTube..."
+                counterTNS += 1; fetch_youtube_channel(p['youtube'], self, youtube)
+            if p['twitter'] != "": 
+                self.ids.category1.text = name + " loading Twitter..."
+                counterTNS += 1; fetch_twitter_profile(p['twitter'], self, twitter)
+            if p['subreddit'] != "": 
+                self.ids.category1.text = name + " loading Subreddit..."
+                counterTNS += 1; fetch_subreddit(self, subreddit, p)
+            if p['articles'] != "": 
+                self.ids.category1.text = name + " loading Articles..."
+                counterTNS += 1; fetch_news_articles(self, articles)
 
             self.ids.category1.text = name
 
@@ -473,6 +481,7 @@ def fetch_subreddit(self, name, profile):
 
 
 
+### code ###
 class StartingScreen(Screen):
     def __init__(self, **var_args):
         super(StartingScreen, self).__init__(**var_args)
@@ -497,23 +506,26 @@ class StartingScreen(Screen):
 
         #create add button
         btnAdd = Button(
-            text = "+", 
-            size_hint_y = None, 
-            height = btnHeight, 
-            background_color = btnBackgroundColor, 
-            background_normal = 'transparent', 
-            background_down = 'transparent', font_size = 30
-        )
-
-        #create edit button
-        btnEdit = Button(
-            text = "-", 
+            text = "Add", 
             size_hint_y = None, 
             height = btnHeight, 
             background_color = btnBackgroundColor, 
             background_normal = 'transparent', 
             background_down = 'transparent', 
-            font_size = 49
+            font_size = btnFontSize,
+            bold = True
+        )
+
+        #create edit button
+        btnEdit = Button(
+            text = "Remove", 
+            size_hint_y = None, 
+            height = btnHeight, 
+            background_color = btnBackgroundColor, 
+            background_normal = 'transparent', 
+            background_down = 'transparent', 
+            font_size = btnFontSize,
+            bold = True
         )
         #create favorite button
         btnFavorites = Button(
@@ -523,19 +535,20 @@ class StartingScreen(Screen):
             background_color = btnBackgroundColor, 
             background_normal = 'transparent', 
             background_down = 'transparent', 
-            font_size = btnFontSize
+            font_size = btnFontSize,
+            bold = True
         )
 
         #create filler button
-        btnFiller = Button(
-            text = "", 
-            size_hint_y = None, 
-            height = btnHeight, 
-            background_color = btnBackgroundColor, 
-            background_normal = 'transparent', 
-            background_down = 'transparent', 
-            font_size = btnFontSize
-        )
+        # btnFiller = Button(
+        #     text = "", 
+        #     size_hint_y = None, 
+        #     height = btnHeight, 
+        #     background_color = btnBackgroundColor, 
+        #     background_normal = 'transparent', 
+        #     background_down = 'transparent', 
+        #     font_size = btnFontSize
+        # )
 
         #bind functions to buttons
         btnAdd.bind(on_press=lambda *args: changeScreen(self, 'add'))
@@ -586,23 +599,6 @@ class StartingScreen(Screen):
 
             #add buttons to layout
             self.bl1.add_widget(newButton)
-
-
-    def AddFillerButtons(self):
-        #set buttons count
-        totalButtons = len(self.bl2.children)
-
-        #add filler buttons
-        if(totalButtons < 6):
-            #create button
-            newButton = Button(
-                size_hint_y = None,
-                text = "",
-                disabled = True
-            )
-
-            #add buttons to layout
-            self.bl2.add_widget(newButton)
 
 
     def saveToFavorites(screen, self, type):
@@ -881,68 +877,8 @@ class StartingScreen(Screen):
         return bl
 
 
-    def createTitleCard(self, *args):
-        #variables
-        text = args[0]
-        backgroundColor = get_color_from_hex("#292f33")
-        formattedText = ""
-        
-        #handle menu type
-        try: menuType = args[1]
-        except: menuType = "null"
-
-        #create boxlayout
-        bl = BoxLayout(
-            orientation = "horizontal", 
-            size_hint_x = 1, 
-            size_hint_y = None,
-            height = 100,
-            width = 660
-        )
-
-        #text formatting
-        text = str(text).replace(" ", "_")
-        text = str(text).split("_")
-        for t in text: formattedText += str(t).capitalize() + " "
-
-        #create button 
-        btn = Button(
-            text = str(formattedText), 
-            size_hint_x = 1, size_hint_y = 1, 
-            background_color = backgroundColor, 
-            background_normal = 'transparent',
-            background_down = 'transparent',
-            color = 'lightgray',
-            font_size = 30
-        )
-        
-        #bind functions to buttons
-        if menuType == 'add': btn.bind(on_press=lambda *args: changeScreen(self, 'add'))
-        elif menuType == 'delete': btn.bind(on_press=lambda *args: changeScreen(self, 'edit'))
-        elif menuType == 'favorites': btn.bind(on_press=lambda *args: changeScreen(self, 'favorites'))
-        elif menuType == 'clear': btn.bind(on_press=lambda *args: StartingScreen.clear_news(self))
-
-        #add button to boxlayout
-        bl.add_widget(btn)
-
-        #create title card successful
-        return bl
-
-
     def clear_news(self):
         self.ids.boxLayoutPost.clear_widgets()
-
-
-    def create_menu(self):
-        #create title card
-        titleCardAdd = StartingScreen.createTitleCard(self, 'Add', 'add')
-        titleCardDelete = StartingScreen.createTitleCard(self, 'Delete', 'delete')
-        titleCardFavorites = StartingScreen.createTitleCard(self, 'Saved', 'favorites')
-        
-        #add title card to layout
-        self.ids.boxLayoutPost.add_widget(titleCardAdd)
-        self.ids.boxLayoutPost.add_widget(titleCardDelete)
-        self.ids.boxLayoutPost.add_widget(titleCardFavorites)
 
     
     def twitterNextPost(self, order):
