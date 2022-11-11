@@ -22,6 +22,7 @@ from StandaloneFunctions import undisplayNewsCard
 from StandaloneFunctions import nitterFilterPost
 from StandaloneFunctions import changeScreen
 from StandaloneFunctions import refreshScreen
+from StandaloneFunctions import newsTextCleaner
 
 
 
@@ -64,28 +65,28 @@ def fetch_news_feed(profile, self):
     #set loading text
     # self.ids.category1.text = name + " loading..."
 
-    #fetch profile youtube data
-    for p in profiles:
-        if p['name'] == name: 
-            print(p['name'])
+    #fetch profile news
+    for profile in profiles:
+        if profile['name'] == name: 
+            # print(p['name'])
 
-            if p['youtube'] != "": 
-                self.ids.category1.text = name + " loading YouTube..."
-                counterTNS += 1; fetch_youtube_channel(p['youtube'], self, youtube)
-            if p['twitter'] != "": 
-                self.ids.category1.text = name + " loading Twitter..."
-                counterTNS += 1; fetch_twitter_profile(p['twitter'], self, twitter)
-            if p['subreddit'] != "": 
-                self.ids.category1.text = name + " loading Subreddit..."
-                counterTNS += 1; fetch_subreddit(self, subreddit, p)
-            if p['articles'] != "": 
-                self.ids.category1.text = name + " loading Articles..."
-                counterTNS += 1; fetch_news_articles(self, articles)
+            if profile['articles'] != "": 
+                self.ids.category1.text = "loading Articles..."
+                counterTNS += 1; fetch_news_articles(self, articles, profile)
+            if profile['youtube'] != "": 
+                self.ids.category1.text = "loading YouTube..."
+                counterTNS += 1; fetch_youtube_channel(self, profile['youtube'], profile)
+            if profile['twitter'] != "": 
+                self.ids.category1.text = "loading Twitter..."
+                counterTNS += 1; fetch_twitter_profile(self, profile['twitter'], profile)
+            if profile['subreddit'] != "": 
+                self.ids.category1.text = "loading Subreddit..."
+                counterTNS += 1; fetch_subreddit(self, subreddit, profile)
 
             self.ids.category1.text = name
 
 
-def fetch_news_articles(self, name):
+def fetch_news_articles(self, name, profile):
     #variables
     global counterSNA
     global savedNewsArticles
@@ -135,6 +136,7 @@ def fetch_news_articles(self, name):
                 title = title.replace("&#8216;", "").replace("&#8217;", "").replace("&#8218;", "")
                 title = title.replace("&#8211;", "").replace("&#8212;", "")
                 title = title.replace("&#8220;", "").replace("&#8221;", "")
+                title = title.replace("  ", " ")
 
                 link = regexLink[count]
                 link = link.replace("<a href=\"/url?q=", "")
@@ -149,7 +151,8 @@ def fetch_news_articles(self, name):
                     "link": link,
                     "date": date,
                     "user": user,
-                    "type": "article"
+                    "type": "article",
+                    "profile": profile['name']
                 }
 
                 #add post obj
@@ -168,7 +171,7 @@ def fetch_news_articles(self, name):
         return
 
 
-def fetch_youtube_channel(url, self, name):
+def fetch_youtube_channel(self, url, profile):
     #null check
     if url == "": print("youtube channel is null"); return
     elif 'http' not in url: print("youtube channel is null"); return
@@ -183,6 +186,7 @@ def fetch_youtube_channel(url, self, name):
     savedYoutubePosts = []
     counterSYP = -1
     numberOfVideosLimit = 10
+    name = profile['name']
 
     #make request
     httpRequest = requests.get(url, headers=requestHeaders)
@@ -256,7 +260,8 @@ def fetch_youtube_channel(url, self, name):
                     "title": str(formatYoutubeTitle),
                     "date": str(formatYoutubeUploadDate),
                     "link": str(formatYoutubeLink),
-                    "type": "youtube"
+                    "type": "youtube",
+                    "profile": profile['name']
                 }
 
                 #add post
@@ -272,7 +277,7 @@ def fetch_youtube_channel(url, self, name):
         return
 
 
-def fetch_twitter_profile(username, self, name):
+def fetch_twitter_profile(self, username, profile):
     #null check
     if username == "":
         print("twitter username is null"); 
@@ -284,6 +289,7 @@ def fetch_twitter_profile(username, self, name):
     savedTwitterPosts = []
     counterSTP = -1
     numberOfTweetsLimit = 10
+    name = profile['name']
 
     #request twitter profile
     httpRequest = requests.get("https://nitter.net/" + username)
@@ -339,7 +345,8 @@ def fetch_twitter_profile(username, self, name):
                     "poll": poll,
                     "images": images,
                     "videos": videos,
-                    "type": "twitter"
+                    "type": "twitter",
+                    "profile": profile['name']
                 }
                 savedTwitterPosts.append(post)
 
@@ -364,29 +371,29 @@ def fetch_twitter_profile(username, self, name):
             youtube = str(savedTwitterPosts[counterSTP]["youtube"])
 
             #add links to card
-            count = 0
-            if savedTwitterPosts[0]["images"] != "False":
-                None 
-                # for img in images:
-                #     count = count + 1
-                #     img = img.replace("%3Fname%3Dsmall", "")
-                #     cardText = cardText + "\n" + str(count) + ": " + "nitter.net/" + img
-                # cardText = cardText + "\n" + str(count) + ": " + "nitter.net/" + images
-            if savedTwitterPosts[0]["videos"] != "False": 
-                count = count + 1
-                video = videos[0]
-                video = video.replace("https://", "")
-                video = video.replace("http://", "")
-                video = video.replace("http://", "")
-                video = video.replace("www.", "")
-                # cardText = cardText + "\n" + str(count) + ": " + video
-            if savedTwitterPosts[0]["youtube"] != "False": 
-                count = count + 1
-                youtube = youtube.replace("https://", "")
-                youtube = youtube.replace("http://", "")
-                youtube = youtube.replace("http://", "")
-                youtube = youtube.replace("www.", "")
-                # cardText = cardText + "\n" + str(count) + ": " + youtube
+            # count = 0
+            # if savedTwitterPosts[0]["images"] != "False":
+            #     None 
+            #     # for img in images:
+            #     #     count = count + 1
+            #     #     img = img.replace("%3Fname%3Dsmall", "")
+            #     #     cardText = cardText + "\n" + str(count) + ": " + "nitter.net/" + img
+            #     # cardText = cardText + "\n" + str(count) + ": " + "nitter.net/" + images
+            # if savedTwitterPosts[0]["videos"] != "False": 
+            #     count = count + 1
+            #     video = videos[0]
+            #     video = video.replace("https://", "")
+            #     video = video.replace("http://", "")
+            #     video = video.replace("http://", "")
+            #     video = video.replace("www.", "")
+            #     # cardText = cardText + "\n" + str(count) + ": " + video
+            # if savedTwitterPosts[0]["youtube"] != "False": 
+            #     count = count + 1
+            #     youtube = youtube.replace("https://", "")
+            #     youtube = youtube.replace("http://", "")
+            #     youtube = youtube.replace("http://", "")
+            #     youtube = youtube.replace("www.", "")
+            #     # cardText = cardText + "\n" + str(count) + ": " + youtube
 
             counterSTP = -1
             savedTwitterPosts = savedTwitterPosts[0:numberOfTweetsLimit]
@@ -477,7 +484,8 @@ def fetch_subreddit(self, name, profile):
                     "link": link,
                     "date": date,
                     "user": profileName,
-                    "type": "subreddit"
+                    "type": "subreddit",
+                    "profile": profile['name']
                 }
 
                 #add obj post
@@ -497,6 +505,10 @@ def fetch_subreddit(self, name, profile):
         Thread(target=lambda : displayNewsCard(self, counterTNS, name, "default", "subreddit", "null")).start() #display card
         print("subreddit fetch failed")
         return
+
+
+
+
 
 
 ### code ###
@@ -637,12 +649,12 @@ class NewsFeedScreen(Screen):
 
                 newFavorite = {
                     "id": id,
-                    "profile": post['username'], 
+                    "profile": post['profile'], 
                     "date": post['date'],
                     "platform": type, 
                     "savedAt": str(datetime.datetime.now())[0:10], 
                     "text": post['text'],
-                    "img": "/thumbnails/" + post['username'] + ".jpg",
+                    "img": "/thumbnails/" + post['profile'] + ".jpg",
                     "link": post['link']
                 }
 
@@ -660,12 +672,12 @@ class NewsFeedScreen(Screen):
 
                 newFavorite = {
                     "id": id,
-                    "profile": post['user'],
+                    "profile": post['profile'],
                     "date": post['date'], 
                     "platform": type, 
                     "savedAt": str(datetime.datetime.now())[0:10], 
                     "text": post['title'],
-                    "img": "/thumbnails/" + post['user'] + ".jpg",
+                    "img": "/thumbnails/" + post['profile'] + ".jpg",
                     "link": post['link']
                 }
 
@@ -683,12 +695,12 @@ class NewsFeedScreen(Screen):
 
                 newFavorite = {
                     "id": id,
-                    "profile": post['user'],
+                    "profile": post['profile'],
                     "date": post['date'], 
                     "platform": type, 
                     "savedAt": str(datetime.datetime.now())[0:10], 
                     "text": post['title'],
-                    "img": "/thumbnails/" + post['user'] + ".jpg",
+                    "img": "/thumbnails/" + post['profile'] + ".jpg",
                     "link": post['link']
                 }
 
@@ -706,12 +718,12 @@ class NewsFeedScreen(Screen):
 
                 newFavorite = {
                     "id": id,
-                    "profile": post['user'],
+                    "profile": post['profile'],
                     "date": post['date'], 
                     "platform": type, 
                     "savedAt": str(datetime.datetime.now())[0:10], 
                     "text": post['title'],
-                    "img": "/thumbnails/" + post['user'] + ".jpg",
+                    "img": "/thumbnails/" + post['profile'] + ".jpg",
                     "link": post['link']
                 }
         
@@ -755,6 +767,7 @@ class NewsFeedScreen(Screen):
     def createNewsCard(self, *args):
         #variables
         obj = args[0]
+        print(str(obj))
         id = obj['id']
         profile = obj['profile']
         platform = obj['platform']
@@ -763,6 +776,9 @@ class NewsFeedScreen(Screen):
         img = obj['img']
         date = obj['date']
         link = obj['link']
+
+        #clean card text
+        if platform == "twitter": text = newsTextCleaner(self, platform, text)
 
         #check platform
         if platform == "twitter": platform = "Twitter"
@@ -786,12 +802,14 @@ class NewsFeedScreen(Screen):
         favorites = json.load(file)
 
         #create profile image button
+        imgSrc = os.getcwd() + "/thumbnails/" + str(profile) + ".jpg"
         btnProfileImg = Button(
             size_hint_x = None, 
             size_hint_y = None, 
             height = 220, 
             width = 220, 
-            background_normal =  os.getcwd() + "/thumbnails/" + profile + ".jpg",
+            background_normal =  imgSrc,
+            background_down =  imgSrc,
             color = 'lightgray'
         )
         
@@ -811,7 +829,7 @@ class NewsFeedScreen(Screen):
         )
 
         btn2 = Button(
-            text = "#", 
+            text = "§", 
             size_hint_y = 0.5,
             size_hint_x = None, 
             width = 70, 
@@ -916,7 +934,7 @@ class NewsFeedScreen(Screen):
             #increment counter
             counterSTP = counterSTP + 1; 
 
-            #set card
+            #variables
             username = str(savedTwitterPosts[counterSTP]["username"])
             id = str(savedTwitterPosts[counterSTP]["id"]) + "/" + str(len(savedTwitterPosts))
             date = str(savedTwitterPosts[counterSTP]["date"])
@@ -924,7 +942,13 @@ class NewsFeedScreen(Screen):
             images = savedTwitterPosts[counterSTP]["images"]
             videos = savedTwitterPosts[counterSTP]["videos"]
             youtube = str(savedTwitterPosts[counterSTP]["youtube"])
-            cardText = "Twitter" + " · " + id + " · " + date + "\n\n" + text + "\n"
+
+            #clean card text
+            text = newsTextCleaner(self, 'twitter', text)
+
+            #set card text
+            cardText = id + " · " + "Twitter" + " · " + date + "\n\n" + text + "\n"
+            # print(cardText)
 
             #debugging
             # print("\n" + str(savedTwitterPosts[counterSTP]))
@@ -997,7 +1021,7 @@ class NewsFeedScreen(Screen):
                 card = self.ids.newsCard4Post
 
             #update card text
-            cardText = "YouTube" + " · " + savedYoutubePosts[counterSYP]['id'] + "/" + str(totalYoutubeVideos) + " · " + savedYoutubePosts[counterSYP]['date'] + "\n\n" + savedYoutubePosts[counterSYP]['title']
+            cardText = savedYoutubePosts[counterSYP]['id'] + "/" + str(totalYoutubeVideos) + " · " + "YouTube" + " · " + savedYoutubePosts[counterSYP]['date'] + "\n\n" + savedYoutubePosts[counterSYP]['title']
             card.text = cardText
 
 
@@ -1032,7 +1056,7 @@ class NewsFeedScreen(Screen):
                 card = self.ids.newsCard4Post
 
             #update card text
-            cardText = "Article" + " · " + savedNewsArticles[counterSNA]['id'] + "/" + str(totalArticles) + " · " + savedNewsArticles[counterSNA]['date'] + "\n" + savedNewsArticles[counterSNA]['title']
+            cardText = savedNewsArticles[counterSNA]['id'] + "/" + str(totalArticles) + " · " + "Article" + " · " + savedNewsArticles[counterSNA]['date'] + "\n\n" + savedNewsArticles[counterSNA]['title']
             card.text = cardText
 
 
@@ -1067,7 +1091,7 @@ class NewsFeedScreen(Screen):
                 card = self.ids.newsCard4Post
 
             #update card text
-            cardText = "Subreddit" + " · " + savedSubredditPosts[counterSSP]['id'] + "/" + str(totalSubredditPosts) + " · " + savedSubredditPosts[counterSSP]['date'] + "\n\n" + savedSubredditPosts[counterSSP]['title']
+            cardText = savedSubredditPosts[counterSSP]['id'] + "/" + str(totalSubredditPosts) + " · " + "Subreddit" + " · " + savedSubredditPosts[counterSSP]['date'] + "\n\n" + savedSubredditPosts[counterSSP]['title']
             card.text = cardText
 
 

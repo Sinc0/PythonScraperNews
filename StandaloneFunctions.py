@@ -1005,4 +1005,30 @@ def fetch_subreddit(self, name, profile):
         Thread(target=lambda : displayNewsCard(self, counterTNS, name, "null", "subreddit", None)).start() #display card
         
         for p in savedSubredditPosts:
-            print(p)     
+            print(p)
+
+def newsTextCleaner(self, type, text):
+    if type == "twitter":
+        text = text.replace("\\u2066", "").replace("\\u2069", "")
+        regexCleaning = re.findall(r'<a href=".*', text)
+        if len(regexCleaning) != 0: 
+            removeFromText = str(regexCleaning[0])
+            text = text.replace(removeFromText, "")
+            tags = re.findall(r'@[\w\d]*</a>.[^<]*', removeFromText)
+            if len(tags) != 0:
+                text = text + tags[0]
+            links = re.findall(r'<a href="[^\"\/][\w\d\s.\/?=\-_#!:]*', removeFromText)
+            if len(links) != 0:
+                text = text + links[0]
+            text = text.replace("www.", "")
+            text = text.replace("a href=", "")
+            text = text.replace("</a>", "")
+            text = text.replace("<\"", "")
+            text = text.replace("//", "/")
+            text = text.replace("  ", " ")
+            text = text.replace("https://", "")
+            text = text.replace("https:/", "")
+            text = text.replace("http://", "")
+            text = text.replace("http:/", "")
+            text = text.replace("&amp;", "")
+        return text     
