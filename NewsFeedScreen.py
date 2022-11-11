@@ -17,9 +17,6 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.stacklayout import StackLayout
 from bs4 import BeautifulSoup
 from StandaloneFunctions import fetch_saved_profiles
-from StandaloneFunctions import displayNewsCard
-from StandaloneFunctions import undisplayNewsCard
-from StandaloneFunctions import nitterFilterPost
 from StandaloneFunctions import changeScreen
 from StandaloneFunctions import refreshScreen
 from StandaloneFunctions import newsTextCleaner
@@ -507,7 +504,330 @@ def fetch_subreddit(self, name, profile):
         return
 
 
+def nitterFilterPost(type, obj, link):
+    #replace characters
+    link = str(link)
+    link = link.replace(" ", "-")
+    link = link.replace("NEW-VIDEO---", "")
+    link = link[0:20]
+    
+    #select filter type
+    if type == "text":
+        #regex
+        text = re.findall(r'<div class="tweet-content media-body" dir="auto">.*', obj); text = str(text)
 
+        #format text
+        if(len(text) > 0):
+            text = str(text)
+            text = text.replace("\\\\\\", "")
+            text = text.replace("\\\\n\\\\n", "\n")
+            text = text.replace("\\\\n", "\n")
+            text = text.replace(": - ", ": ")
+            text = text.replace("['<div class=\"tweet-content media-body\" dir=\"auto\">", "")
+            text = text.replace("</div>']", "")
+            text = text.replace("']", "")
+            text = text.replace("\\'", "'")
+            text = text.replace("https://", "")
+            text = text.replace("piped.kavin.rocks/", "youtube.com/watch?v=")
+            # text = text.split('">')[0]
+            # does not filter out comments # ex: <a href="youtube.com/watch?v=QsHuE0LOPIY">youtube.com/watch?v=QsHuE0LOPIY</a>
+            # @.*[^</a>]
+            # <a href=".*@.*</a>
+            return text
+
+        #null check
+        elif(len(text) == 0): return "False"
+
+    elif type == "retweet":
+        #regex
+        retweet = re.findall(r'<div class="retweet-header">.*</span>', obj)
+        
+        #tweet is retweet
+        if(len(retweet) > 0): return "True"
+
+        #tweet is original
+        elif(len(retweet) == 0): return "False"
+
+    elif type == "pinned":
+        #regex
+        pinned = re.findall(r'<div class="pinned">', obj)
+        
+        #tweet is pinned
+        if(len(pinned) > 0): return "True"
+
+        #tweet is not pinned
+        elif(len(pinned) == 0): return "False"
+            
+    elif type == "date":
+        #regex
+        date = re.findall(r'title=".*</a></span>', obj); date = date[0]
+        
+        #format date
+        if(len(date) > 0):
+            date = str(date)
+            date = date.split("\">")[0]
+            date = date.replace('title="', "")
+            date = date[0:-14]
+            date = date.replace(",", "")
+            return date
+            
+        #null check
+        elif(len(link) == 0): return "False"
+
+    elif type == "link":
+        #regex
+        link = re.findall(r'<a class="tweet-link" href="/.*</a>', obj)
+        
+        #format link
+        if(len(link) > 0):
+            link = str(link)
+            link = link.replace("['<a class=\"tweet-link\" href=\"/", "")
+            link = link.replace("\"></a>']", "")
+            link = link.replace("#m", "")
+            link = "https://nitter.net/" + link
+            return link
+
+        #null check
+        elif(len(link) == 0): return "False"
+
+    elif type == "likes":
+        #regex
+        likes = re.findall(r'icon-heart" title=""></span>.*', obj)
+
+        #format likes
+        if(len(likes) > 0):
+            likes = str(likes)
+            likes = likes.replace("['icon-heart\" title=\"\"></span> ", "")
+            likes = likes.replace("</div></span>']", "")
+            likes = likes.replace(",", ".")
+            if likes == "": likes = "0"
+            return likes
+
+        #null check
+        elif(len(likes) == 0): return "False"
+            
+    elif type == "qoutes":
+        #regex
+        qoutes = re.findall(r'icon-quote" title=""></span>.*', obj)
+
+        #format qoutes
+        if(len(qoutes) > 0):
+            qoutes = str(qoutes)
+            qoutes = qoutes.replace("['icon-quote\" title=\"\"></span>", "")
+            qoutes = qoutes.replace("['icon-quote\" title=\"\"></span> ", "")
+            qoutes = qoutes.replace("</div></span>']", "")
+            qoutes = qoutes.replace(",", ".")
+            qoutes = qoutes.replace(" ", "")
+            if qoutes == "": qoutes = "0"
+            return qoutes
+
+        #null check
+        elif(len(qoutes) == 0): return "False"
+
+    elif type == "retweets":
+        #regex
+        retweets = re.findall(r'icon-retweet" title=""></span>.*', obj)
+
+        #format retweets count
+        if(len(retweets) > 0):
+            retweets = str(retweets)
+            retweets = retweets.replace("[\'icon-retweet\" title=\"\"></span> ", "")
+            retweets = retweets.replace("</div></span>']", "")
+            retweets = retweets.replace(",", ".")
+            retweets = retweets.replace("Marques Brownlee retweeted</div></span></div>'. 'icon-retweet\" title=\"\"></span> ", "")
+            if retweets == "": retweets = "0"
+            return retweets
+
+        #null check
+        elif(len(retweets) == 0): return "False"
+
+    elif type == "comments":
+        #regex
+        comments = re.findall(r'icon-comment" title=""></span>.*', obj)
+
+        #format comments count
+        if(len(comments) > 0):
+            comments = str(comments)
+            comments = comments.replace("[\'icon-comment\" title=\"\"></span> ", "")
+            comments = comments.replace("</div></span>']", "")
+            comments = comments.replace(",", ".")
+            if comments == "": comments = "0"
+            return comments
+        elif(len(comments) == 0): return "False"
+
+    elif type == "videos":
+        #variables
+        videosArray = []
+
+        #regex
+        videos = re.findall(r'class="gallery-video"><div class="attachment video-container">\n<img src=".*', obj)
+
+        #format video thumbnail url
+        if(len(videos) > 0):
+            for vid in videos:
+                vid = vid.replace("\n", "")
+                vid = vid.replace("class=\"gallery-video\"><div class=\"attachment video-container\">", "")
+                vid = vid.replace("<img src=\"/", "")
+                vid = vid.replace("\"/>", "")
+                vid = "https://nitter.net/" + vid
+                videosArray.append(vid)
+            return videosArray
+
+        #null check
+        elif(len(videos) == 0): return "False"
+            
+    elif type == "images":
+        #variables
+        imagesArray = []
+
+        #regex
+        images = re.findall(r'target="_blank"><img alt="" src="/pic.*/>', obj)
+
+        #handle images
+        if(len(images) > 0):
+            #variables
+            count = 0
+
+            #handle img urls
+            for img in images:
+                count = count + 1
+
+                #format img url
+                img = img.replace("target=\"_blank\"><img alt=\"\" src=\"/", "")
+                img = img.replace("\"/>", "")
+                
+                #add to array
+                imagesArray.append(img)
+
+                #download img
+                # img = img.replace("%3Fname%3Dsmall", "")
+                # img = "https://nitter.net/" + img
+                # img_data = requests.get(img).content
+                # with open(os.getcwd() + "/temp/" + str(link) + "-" + str(count) + ".jpg", 'wb') as handler: handler.write(img_data)
+                
+            return imagesArray
+            
+        #null check
+        elif(len(images) == 0): return "False"
+
+    elif type == "poll":
+        #regex
+        poll = re.findall(r'<div class="poll-meter leader">\n.*</span>\n.*</span>\n.*</span>\n.*</div>', obj)
+        pollLeader = re.findall(r'<div class="poll-meter leader">\n.*</span>\n.*</span>\n.*</span>\n.*</div>', obj)
+        pollLeader = str(pollLeader)
+        pollLeader = pollLeader.split('<span class="poll-choice-option">')
+        pollItems = re.findall(r'<div class="poll-meter">\n.*</span>\n.*</span>\n.*</span>\n.*</div>', obj)
+        pollVotes = re.findall(r'<span class="poll-info">.*</span>', obj)
+
+        #handle poll text
+        if(len(pollLeader) == 2):
+            #format poll leader
+            pollLeaderPercentage = str(pollLeader[0].split("%")[0].replace("['<div class=\"poll-meter leader\">\\n<span class=\"poll-choice-bar\" style=\"width: ", ""))
+            pollLeaderText = str(pollLeader[1].split("%")[0]).replace("</span>\\n</div>']", "")
+            obj = pollLeaderPercentage + "%" + " · " + pollLeaderText
+
+            #format poll items
+            pollItems = str(pollItems).replace("['", "").replace("']", "")
+            pollItems = pollItems.split('\'<div class="poll-meter">')
+            for i in pollItems:
+                i = i.replace('<div class=\"poll-meter\">\\n<span class=\"poll-choice-bar\" style=\"width: ', "")
+                i = i.replace('\\n<span class=\"poll-choice-bar\" style=\"width:  ', "")
+                i = i.replace('</span>\\n<span class=\"poll-choice-option\">', " · ")
+                i = i.replace('</span>\\n</div>', "")
+                i = i.replace('; ', " · ")
+                i = i.replace("'", "")
+                i = i.replace(", ", "")
+                i = i.split(" · ")[0] + " · " + i.split(" · ")[2]
+                obj = obj + "\n" + i
+
+            #format poll votes
+            pollVotes = str(pollVotes)
+            pollVotes = pollVotes.replace("['<span class=\"poll-info\">", "")
+            pollVotes = pollVotes.replace("</span>']", "")
+            pollVotes = pollVotes.replace(",", ".")
+            pollVotes = pollVotes.replace(" votes • Final results", "")
+            pollVotes = "Total Votes: " + pollVotes
+            obj = obj + "\n" + pollVotes
+
+            return obj
+
+        #null check
+        elif(len(pollLeader) == 1): return "False"
+            
+    elif type == "youtube":
+        #regex
+        obj = re.findall(r'https://piped.kavin.rocks/.*</div>', obj)
+
+        #format youtube url
+        if(len(obj) > 0): 
+            obj = str(obj)
+            obj = obj.replace("piped.kavin.rocks/", "youtube.com/watch?v=")
+            obj = obj.replace("['", "")
+            obj = obj.replace("']", "")
+            obj = obj = obj.split('">')[0]
+            return obj
+
+        #null check
+        elif(len(obj) == 0): return "False"
+
+
+def displayNewsCard(self, id, username, type, platform, profileData):
+    #check card id
+    if id == 1: 
+        cardObj = self.ids.newsCard1Post; 
+        boxlayoutObj = self.ids.boxLayoutNewsCard1; 
+        cardObj.order = 1
+        self.changeButtonColor(1, platform)
+    elif id == 2: 
+        cardObj = self.ids.newsCard2Post; 
+        boxlayoutObj = self.ids.boxLayoutNewsCard2; 
+        cardObj.order = 2
+        self.changeButtonColor(2, platform)
+    elif id == 3: 
+        cardObj = self.ids.newsCard3Post; 
+        boxlayoutObj = self.ids.boxLayoutNewsCard3; 
+        cardObj.order = 3
+        self.changeButtonColor(3, platform)
+    elif id == 4: 
+        cardObj = self.ids.newsCard4Post; 
+        boxlayoutObj = self.ids.boxLayoutNewsCard4; 
+        cardObj.order = 4
+        self.changeButtonColor(4, platform)
+
+    #check platform
+    if platform == "twitter": 
+        cardObj.type = "twitter"
+        cardObj.text = "Twitter · No posts found..."
+    elif platform == "youtube": 
+        cardObj.text = "YouTube · No posts found..."
+        cardObj.type = "youtube"
+    elif platform == "article": 
+        cardObj.text = "Articles · No posts found..."
+        cardObj.type = "article"
+    elif platform == "subreddit": 
+        cardObj.text = "Subreddit · No posts found..."
+        cardObj.type = "subreddit"
+    
+    #check data
+    if profileData != "null" and platform == "twitter":
+        cardObj.text = "Twitter · Click to start..."
+    elif profileData != "null" and platform == "youtube":
+        cardObj.text = "YouTube · Click to start..."
+    elif profileData != "null" and platform == "article":
+        cardObj.text = "Articles · Click to start..."
+    elif profileData != "null" and platform == "subreddit":
+        cardObj.text = "Subreddit · Click to start..."
+    
+    #display card    
+    boxlayoutObj.opacity = 1
+    cardObj.opacity = 1
+
+
+def undisplayNewsCard(self, id):
+    if id == 1: self.ids.boxLayoutNewsCard1.opacity = 0
+    elif id == 2: self.ids.boxLayoutNewsCard2.opacity = 0
+    elif id == 3: self.ids.boxLayoutNewsCard3.opacity = 0
+    elif id == 4: self.ids.boxLayoutNewsCard4.opacity = 0
 
 
 
