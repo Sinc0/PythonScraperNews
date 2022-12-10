@@ -835,6 +835,7 @@ def undisplayNewsCard(self, id):
 class NewsFeedScreen(Screen):
     def __init__(self, **var_args):
         super(NewsFeedScreen, self).__init__(**var_args)
+        self.ids.category1.text = "\nWelcome to Scraper News \n               § = link\n               + = save"
 
 
     def on_pre_enter(self, *args):
