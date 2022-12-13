@@ -957,111 +957,126 @@ class NewsFeedScreen(Screen):
         # print(savedYoutubePosts[counterSYP])
         
         if type == "twitter":
-            if len(savedTwitterPosts) == 0: 
-                return
+            try:
+                if len(savedTwitterPosts) == 0: 
+                    return
 
-            elif len(savedTwitterPosts) > 0:
-                post = savedTwitterPosts[counterSTP]
+                elif len(savedTwitterPosts) > 0:
+                    post = savedTwitterPosts[counterSTP]
 
-                #create button id
-                id = post['username'] + post['text'] + post['date']
-                id = id.replace(" ", "").replace("_", "").replace("-", "").replace("\n", "").replace("·", "").replace("u00b7", "")
-                id = id[0:60]
+                    #create button id
+                    id = post['username'] + post['text'] + post['date']
+                    id = id.replace(" ", "").replace("_", "").replace("-", "").replace("\n", "").replace("·", "").replace("u00b7", "")
+                    id = id[0:60]
 
-                newFavorite = {
-                    "id": id,
-                    "profile": post['profile'], 
-                    "date": post['date'],
-                    "platform": type, 
-                    "savedAt": str(datetime.datetime.now())[0:10], 
-                    "text": post['text'],
-                    "img": "/thumbnails/" + post['profile'] + ".jpg",
-                    "link": post['link']
-                }
+                    newFavorite = {
+                        "id": id,
+                        "profile": post['profile'], 
+                        "date": post['date'],
+                        "platform": type, 
+                        "savedAt": str(datetime.datetime.now())[0:10], 
+                        "text": post['text'],
+                        "img": "/thumbnails/" + post['profile'] + ".jpg",
+                        "link": post['link']
+                    }
+            except:
+                print("error: save twitter card failed")
 
         elif type == "youtube":
-            post = savedYoutubePosts[counterSYP]
+            try:
+                post = savedYoutubePosts[counterSYP]
 
-            if len(savedYoutubePosts) == 0: 
-                return
+                if len(savedYoutubePosts) == 0: 
+                    return
 
-            elif len(savedYoutubePosts) > 0:
-                #create button id
-                id = post['user'] + post['title'] + post['date']
-                id = id.replace(" ", "").replace("_", "").replace("-", "").replace("\n", "").replace("·", "").replace("u00b7", "")
-                id = id[0:60]
+                elif len(savedYoutubePosts) > 0:
+                    #create button id
+                    id = post['user'] + post['title'] + post['date']
+                    id = id.replace(" ", "").replace("_", "").replace("-", "").replace("\n", "").replace("·", "").replace("u00b7", "")
+                    id = id[0:60]
 
-                newFavorite = {
-                    "id": id,
-                    "profile": post['profile'],
-                    "date": post['date'], 
-                    "platform": type, 
-                    "savedAt": str(datetime.datetime.now())[0:10], 
-                    "text": post['title'],
-                    "img": "/thumbnails/" + post['profile'] + ".jpg",
-                    "link": post['link']
-                }
+                    newFavorite = {
+                        "id": id,
+                        "profile": post['profile'],
+                        "date": post['date'], 
+                        "platform": type, 
+                        "savedAt": str(datetime.datetime.now())[0:10], 
+                        "text": post['title'],
+                        "img": "/thumbnails/" + post['profile'] + ".jpg",
+                        "link": post['link']
+                    }
+            except:
+                print("error: save youtube card failed")
 
         elif type == "article":
-            post = savedNewsArticles[counterSNA]
+            try:
+                post = savedNewsArticles[counterSNA]
 
-            if len(savedNewsArticles) == 0: 
-                return
+                if len(savedNewsArticles) == 0: 
+                    return
 
-            elif len(savedNewsArticles) > 0:
-                #create button id
-                id = post['user'] + post['title'] + post['date']
-                id = id.replace(" ", "").replace("_", "").replace("-", "").replace("\n", "").replace("·", "").replace("u00b7", "")
-                id = id[0:60]
+                elif len(savedNewsArticles) > 0:
+                    #create button id
+                    id = post['user'] + post['title'] + post['date']
+                    id = id.replace(" ", "").replace("_", "").replace("-", "").replace("\n", "").replace("·", "").replace("u00b7", "")
+                    id = id[0:60]
 
-                newFavorite = {
-                    "id": id,
-                    "profile": post['profile'],
-                    "date": post['date'], 
-                    "platform": type, 
-                    "savedAt": str(datetime.datetime.now())[0:10], 
-                    "text": post['title'],
-                    "img": "/thumbnails/" + post['profile'] + ".jpg",
-                    "link": post['link']
-                }
+                    newFavorite = {
+                        "id": id,
+                        "profile": post['profile'],
+                        "date": post['date'], 
+                        "platform": type, 
+                        "savedAt": str(datetime.datetime.now())[0:10], 
+                        "text": post['title'],
+                        "img": "/thumbnails/" + post['profile'] + ".jpg",
+                        "link": post['link']
+                    }
+            except:
+                print("error: save article card failed")
 
         elif type == "subreddit":
-            post = savedSubredditPosts[counterSSP]
+            try:
+                post = savedSubredditPosts[counterSSP]
 
-            if len(savedSubredditPosts) == 0: 
-                return
+                if len(savedSubredditPosts) == 0: 
+                    return
 
-            elif len(savedSubredditPosts) > 0:
-                #create button id
-                id = post['user'] + post['title'] + post['date']
-                id = id.replace(" ", "").replace("_", "").replace("-", "").replace("\n", "").replace("·", "").replace("u00b7", "")
-                id = id[0:60]
+                elif len(savedSubredditPosts) > 0:
+                    #create button id
+                    id = post['user'] + post['title'] + post['date']
+                    id = id.replace(" ", "").replace("_", "").replace("-", "").replace("\n", "").replace("·", "").replace("u00b7", "")
+                    id = id[0:60]
 
-                newFavorite = {
-                    "id": id,
-                    "profile": post['profile'],
-                    "date": post['date'], 
-                    "platform": type, 
-                    "savedAt": str(datetime.datetime.now())[0:10], 
-                    "text": post['title'],
-                    "img": "/thumbnails/" + post['profile'] + ".jpg",
-                    "link": post['link']
-                }
+                    newFavorite = {
+                        "id": id,
+                        "profile": post['profile'],
+                        "date": post['date'], 
+                        "platform": type, 
+                        "savedAt": str(datetime.datetime.now())[0:10], 
+                        "text": post['title'],
+                        "img": "/thumbnails/" + post['profile'] + ".jpg",
+                        "link": post['link']
+                    }
+            except:
+                print("error: save subreddit card failed")
         
         #fetch favorites from favorites.json
-        file = open('favorites.json', "r")
-        favorites = json.load(file)
-        totalFavorites = len(favorites)
+        try:
+            file = open('favorites.json', "r")
+            favorites = json.load(file)
+            totalFavorites = len(favorites)
 
-        #check if favorite already saved
-        for f in favorites:
-            if f['id'] == id: print('news card already saved'); return
-        
-        #save favorite
-        favorites.append(newFavorite)
-        out_file = open("favorites.json", "w")
-        json.dump(favorites, out_file, indent = 6)
-        out_file.close()
+            #check if favorite already saved
+            for f in favorites:
+                if f['id'] == id: print('news card already saved'); return
+            
+            #save favorite
+            favorites.append(newFavorite)
+            out_file = open("favorites.json", "w")
+            json.dump(favorites, out_file, indent = 6)
+            out_file.close()
+        except:
+            print("error: save to favorites.json failed")
         
 
     def removeFromFavorites(self, cardId):

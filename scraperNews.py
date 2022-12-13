@@ -41,12 +41,10 @@ from StandaloneFunctions import refreshScreen
 
 
 ### code ###
-kivy.require('2.0.0')
-
 #load kv file or string
 # Builder.load_file("scraperNews.kv")
 Builder.load_string("""
-#:kivy 2.1.0
+#:kivy 2.0.0
 #:import hex kivy.utils.get_color_from_hex
 
 <NewsFeedScreen>:
@@ -619,7 +617,9 @@ Builder.load_string("""
                 font_size: 20
                 hint_text: "select profile"
                 halign: "center"
-                disabled: True
+                disabled: True,
+                multiline: False
+                write_tab: False
 
             # Label:
             #     size_hint_y: None
@@ -696,12 +696,13 @@ Builder.load_string("""
 """)
 
 #set kivy settings
-Window.set_icon("icon.ico") # Window.set_icon("icon.png")
+kivy.require('2.0.0')
 # Config.set('kivy','window_icon', 'icon.png')
-Config.set('input', 'mouse', 'mouse,multitouch_on_demand') #removes right click display red dot
-Config.set('graphics', 'resizable', '1') #changing this might break display resolution
-Config.set('graphics', 'fullscreen', '0') #changing this might break display resolution
-Config.write()
+# Config.set('input', 'mouse', 'mouse,multitouch_on_demand') #removes right click display red dot
+# Config.set('graphics', 'resizable', '1') #changing this might break display resolution
+#  Config.set('graphics', 'fullscreen', '0') #changing this might break display resolution
+# Config.write()
+Window.set_icon("logo.ico") # Window.set_icon("icon.png")
 Window.size = (1000, 700) #width, height
 
 #globals
