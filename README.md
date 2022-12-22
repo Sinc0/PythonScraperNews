@@ -1,8 +1,8 @@
 ## Scraper News
-- type = Desktop App
-- description = Scrape news text from the web and display in a easy to read format
+- Type = Desktop App
+- Description = Scrape news text from the web and display in a easy to read format
 - LoC = ~2600
-- [logo]()
+- [Logo]()
 
 ### Image Examples
 - [News Feed](https://github.com/Sinc0/PythonScraperNews/blob/master/imageProfileNewsFeed.png)
@@ -31,7 +31,5 @@
 - [Save to Favorites](https://github.com/Sinc0/PythonScraperNews/blob/master/NewsFeedScreen.py#L634-L743)
 
 ### Releases
-- count = 0
-- [windows]()
-- [linux]()
-- [mac]()
+- [Windows]()
+- [Linux]()
