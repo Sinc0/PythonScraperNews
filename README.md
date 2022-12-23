@@ -1,6 +1,6 @@
 ## Scraper News
 - Type = Desktop App
-- Description = Scrape news text from the web and display in a easy to read format
+- Description = Scrapes news-text from the web and displays it in a easy to read format
 - LoC = ~2600
 - [Img - Logo](https://github.com/Sinc0/PythonScraperNews/blob/master/icon.png)
 - [Img - News Feed](https://github.com/Sinc0/PythonScraperNews/blob/master/imageProfileNewsFeed.png)
