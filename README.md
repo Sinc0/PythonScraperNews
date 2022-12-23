@@ -29,5 +29,5 @@
 - [Save to Favorites](https://github.com/Sinc0/PythonScraperNews/blob/master/NewsFeedScreen.py#L955-L1079)
 
 ### Releases
-- [Windows](https://github.com/Sinc0/PythonScraperNews/releases/download/v1.0.0/ScraperNews.elf)
-- [Linux](https://github.com/Sinc0/PythonScraperNews/releases/download/v1.0.0/ScraperNews.exe)
+- [Windows](https://github.com/Sinc0/PythonScraperNews/releases/download/v1.0.0/ScraperNews.exe)
+- [Linux](https://github.com/Sinc0/PythonScraperNews/releases/download/v1.0.0/ScraperNews.elf)
