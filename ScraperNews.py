@@ -1,30 +1,726 @@
-### imports ###
-import datetime
-import json
+#------ IMPORTS ------#
 import requests
 import re
 import time
-from threading import Thread
-import time
+import datetime
+import json
 import os
 import webbrowser
 import pyclip
-from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.utils import get_color_from_hex
-from kivy.uix.button import Button
+import sys
+import kivy
 from threading import Thread
+from functools import partial
+from bs4 import BeautifulSoup
+from kivy.app import App
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
+from kivy.config import Config
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.screenmanager import NoTransition
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.stacklayout import StackLayout
-from bs4 import BeautifulSoup
+from kivy.utils import get_color_from_hex
+from kivy.lang import Builder
+from kivy.core.window import Window
+from kivy.graphics import Rectangle, Color
+from kivy.uix.image import Image, AsyncImage
 from StandaloneFunctions import fetch_saved_profiles
-from StandaloneFunctions import changeScreen
+from StandaloneFunctions import fetch_saved_favorites
+from StandaloneFunctions import year_progress
+from StandaloneFunctions import add_profile
 from StandaloneFunctions import refreshScreen
+from StandaloneFunctions import changeScreen
 from StandaloneFunctions import newsTextCleaner
 
 
+#------ LOAD KIVY UI ------#
+Builder.load_string("""
+#:kivy 2.0.0
+#:import hex kivy.utils.get_color_from_hex
 
-### functions ###
+<NewsFeedScreen>:
+    bl1: boxLayout1
+
+    GridLayout:
+        cols: 2
+        rows: 1
+        spacing: 1
+
+        ScrollView:
+            id: svScrollBar2
+            do_scroll_x: False
+            do_scroll_y: True
+            effect_cls: 'ScrollEffect'
+            size_hint_x: None
+            width: 100
+            
+            BoxLayout:
+                id: boxLayout1
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 1
+
+        ScrollView:
+            id: svScrollBar
+            effect_cls: 'ScrollEffect'
+
+            BoxLayout:
+                id: boxLayoutPost
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 2
+                padding: 40, 0 # left, top
+
+                Label:
+                    id: category1
+                    size_hint_y: None
+                    size_hint_x: None
+                    height: 80
+                    width: 730
+                    text: ""
+                    disabled: False
+                    opacity: 1
+                    halign: 'left'
+                    color: "white"
+                    bold: True,
+                    opacity: 1
+                    font_size: 21
+
+                BoxLayout:
+                    id: boxLayoutNewsCard1
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    size_hint_x: None
+                    height: self.minimum_height
+                    width: 730
+                    spacing: 0
+                    padding: 0
+                    opacity: 0
+                    disabled: False
+                    
+                    Button:
+                        id: buttonCopyLink1
+                        size_hint_y: 1
+                        size_hint_x: None
+                        height: 100
+                        width: 40
+                        text: "§"
+                        background_color: hex('#0e1012') # "white" # hex('#1DA1F2') # "darkgray" # "#292f33"
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1
+                        on_touch_down: root.copyToClipboard(newsCard1Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: False
+                        font_size: 16 
+                    Button:
+                        id: newsCard1Post
+                        size_hint_y: None
+                        size_hint_x: None
+                        text: ""
+                        padding: 10, 20 #left, top
+                        text_size: self.width, None #width, height
+                        height: self.texture_size[1]
+                        width: 730
+                        multiline: True
+                        disabled: False
+                        halign:'left'
+                        valign: 'top'
+                        color: 'white'
+                        opacity: 1
+                        font_size: 17
+                        disabled: False
+                        bold: True
+                        on_touch_down: root.nextPost(newsCard1Post.order, newsCard1Post.type) if self.collide_point(*args[1].pos) else False
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        # height: self.texture_size[1]
+                        # text_size: self.width, None
+                        # size: self.texture_size
+                    Button:
+                        id: buttonAddToFavs1
+                        size_hint_y: 1
+                        size_hint_x: None
+                        # height: 100
+                        width: 46
+                        text: "+"
+                        background_color: hex('#0e1012') # "green" # "#292f33"
+                        background_normal: "transparent" # "#292f33"
+                        background_down: "transparent" # "#292f33"
+                        disabled: False
+                        opacity: 1 
+                        on_touch_down: root.saveToFavorites(self, newsCard1Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: False
+                        font_size: 19
+
+                Label:
+                    id: category2
+                    size_hint_y: None
+                    size_hint_x: None
+                    height: 1
+                    width: 730
+                    text: ""
+                    disabled: False
+                    opacity: 1
+                    halign: 'center'
+                    color: "white"
+                    bold: True,
+                    opacity: 0.9
+                    font_size: 16
+
+                BoxLayout:
+                    id: boxLayoutNewsCard2
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    size_hint_x: None
+                    height: self.minimum_height
+                    width: 730
+                    spacing: 0
+                    padding: 0
+                    opacity: 0
+                    disabled: False
+                    
+                    Button:
+                        id: buttonCopyLink2
+                        size_hint_y: 1
+                        size_hint_x: None
+                        height: 40
+                        width: 40
+                        text: "§"
+                        background_color: hex('#0e1012') # "white" # hex('#1DA1F2') # "darkgray" # "#292f33"
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1
+                        on_touch_down: root.copyToClipboard(newsCard2Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: False
+                        font_size: 16
+                    Button:
+                        id: newsCard2Post
+                        size_hint_y: None
+                        size_hint_x: None
+                        text: ""
+                        padding: 10, 20 #left, top
+                        # text_size: 660, 240 #width, height
+                        # height: 240
+                        text_size: self.width, None #width, height
+                        height: self.texture_size[1]
+                        width: 730
+                        multiline: True
+                        disabled: False
+                        halign:'left'
+                        valign: 'top'
+                        color: 'white'
+                        opacity: 1
+                        font_size: 17
+                        disabled: False
+                        bold: True
+                        on_touch_down: root.nextPost(newsCard2Post.order, newsCard2Post.type) if self.collide_point(*args[1].pos) else False
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        # height: self.texture_size[1]
+                        # size: self.texture_size
+                        # text_size: self.width, None
+                        # background_color: '#1DA1F2' # 292f33
+                    Button:
+                        id: buttonAddToFavs2
+                        size_hint_y: 1
+                        size_hint_x: None
+                        # height: 40
+                        width: 46
+                        text: "+"
+                        background_color: hex('#0e1012') # "green" # "#292f33"
+                        background_normal: "transparent" # "#292f33"
+                        background_down: "transparent" # "#292f33"
+                        disabled: False
+                        opacity: 1 
+                        on_touch_down: root.saveToFavorites(self, newsCard2Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: False
+                        font_size: 19
+
+                Label:
+                    id: category3
+                    size_hint_y: None
+                    size_hint_x: None
+                    height: 1
+                    width: 730
+                    text: ""
+                    disabled: False
+                    opacity: 1
+                    halign: 'center'
+                    color: "white"
+                    bold: True,
+                    opacity: 1
+                    font_size: 16
+
+                BoxLayout:
+                    id: boxLayoutNewsCard3
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    size_hint_x: None
+                    height: self.minimum_height
+                    width: 730
+                    spacing: 0
+                    padding: 0
+                    opacity: 0
+                    disabled: False
+                                        
+                    Button:
+                        id: buttonCopyLink3
+                        size_hint_y: 1
+                        size_hint_x: None
+                        height: 100
+                        width: 40
+                        text: "§"
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1
+                        on_touch_down: root.copyToClipboard(newsCard3Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: False
+                        font_size: 16
+                    Button:
+                        id: newsCard3Post
+                        size_hint_y: None
+                        size_hint_x: None
+                        text: ""
+                        padding: 10, 20 #left, top
+                        # text_size: 660, 240 #width, height
+                        # height: 240
+                        text_size: self.width, None #width, height
+                        height: self.texture_size[1]
+                        width: 730
+                        multiline: True
+                        disabled: False
+                        halign:'left'
+                        valign: 'top'
+                        color: 'white'
+                        opacity: 1
+                        font_size: 17
+                        disabled: False
+                        bold: True
+                        on_touch_down: root.nextPost(newsCard3Post.order, newsCard3Post.type) if self.collide_point(*args[1].pos) else False
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        # height: self.texture_size[1]
+                        # size: self.texture_size
+                        # text_size: self.width, None
+                        # background_color: '#1DA1F2' # 292f33
+                    Button:
+                        id: buttonAddToFavs3
+                        size_hint_y: 1
+                        size_hint_x: None
+                        # height: 40
+                        width: 46
+                        text: "+"
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1 
+                        on_touch_down: root.saveToFavorites(self, newsCard3Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: False
+                        font_size: 19
+
+                Label:
+                    id: category4
+                    size_hint_y: None
+                    size_hint_x: None
+                    height: 1
+                    width: 730
+                    text: ""
+                    disabled: False
+                    opacity: 1
+                    halign: 'center'
+                    color: "white"
+                    bold: True,
+                    opacity: 1
+                    font_size: 16
+
+                BoxLayout:
+                    id: boxLayoutNewsCard4
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    size_hint_x: None
+                    height: self.minimum_height
+                    width: 730
+                    spacing: 0
+                    padding: 0
+                    opacity: 0
+                    disabled: False
+
+                    Button:
+                        id: buttonCopyLink4
+                        size_hint_y: 1
+                        size_hint_x: None
+                        height: 100
+                        width: 40
+                        text: "§"
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1
+                        on_touch_down: root.copyToClipboard(newsCard4Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: False
+                        font_size: 16
+                    Button:
+                        id: newsCard4Post
+                        size_hint_y: None
+                        size_hint_x: None
+                        text: ""
+                        padding: 10, 20 #left, top
+                        # text_size: 660, 240 #width, height
+                        # height: 240
+                        text_size: self.width, None #width, height
+                        height: self.texture_size[1]
+                        width: 730
+                        multiline: True
+                        disabled: False
+                        halign:'left'
+                        valign: 'top'
+                        color: 'white'
+                        opacity: 1
+                        font_size: 17
+                        disabled: False
+                        bold: True
+                        on_touch_down: root.nextPost(newsCard4Post.order, newsCard4Post.type) if self.collide_point(*args[1].pos) else False
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        # height: self.texture_size[1]
+                        # size: self.texture_size
+                        # text_size: self.width, None
+                        # background_color: '#1DA1F2' # 292f33
+                    Button:
+                        id: buttonAddToFavs4
+                        size_hint_y: 1
+                        size_hint_x: None
+                        # height: 40
+                        width: 46
+                        text: "+"
+                        background_color: hex('#0e1012')
+                        background_normal: "transparent"
+                        background_down: "transparent"
+                        disabled: False
+                        opacity: 1 
+                        on_touch_down: root.saveToFavorites(self, newsCard4Post.type) if self.collide_point(*args[1].pos) else False
+                        valign: 'top'
+                        color: "white"
+                        bold: False
+                        font_size: 19
+
+                Label:
+                    id: category5
+                    size_hint_y: None
+                    size_hint_x: None
+                    height: 49
+                    width: 730
+                    text: ""
+                    disabled: True
+                    opacity: 1
+                    halign: 'center'
+                    color: "white"
+                    bold: False,
+                    opacity: 1
+                    font_size: 16
+
+<AddProfileScreen>:
+    bl1: boxLayout1
+    ti1: profileName
+    ti2: profileYoutube
+    ti3: profileTwitter
+    ti4: profileArticles
+    ti5: profileSubreddit
+    
+    GridLayout:
+        cols: 2
+        rows: 1
+
+        ScrollView:
+            id: svScrollBar2
+            do_scroll_x: False
+            do_scroll_y: True
+            effect_cls: 'ScrollEffect'
+            size_hint_x: None
+            width: 100
+
+            BoxLayout:
+                id: boxLayout1
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                
+                Button:
+                    size_hint_y: None
+                    text: "<"
+                    on_press: root.manager.current = 'start'
+                    font_size: 40
+                    disabled: False
+                    background_color: "black"
+
+        StackLayout:
+            id: testStackLayout1
+            size_hint_y: 1
+            size_hint_x: 1
+            
+            Label:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                text: "Custom Profile"
+                bold: True
+            TextInput:
+                id: profileName
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                # width: 730
+                font_size: 20
+                hint_text: "desired profile name"
+                halign: "center"
+                multiline: False
+                write_tab: False
+            TextInput:
+                id: profileYoutube
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                # width: 730
+                font_size: 20
+                hint_text: "youtube channel name"
+                halign: "center"
+                multiline: False
+                write_tab: False
+            TextInput:
+                id: profileTwitter
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                # width: 730
+                font_size: 20
+                hint_text: "twitter username"
+                halign: "center"
+                multiline: False
+                write_tab: False
+            TextInput:
+                id: profileArticles
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                # width: 730
+                font_size: 20
+                hint_text: "search phrase for news articles"
+                halign: "center"
+                multiline: False
+                write_tab: False
+            TextInput:
+                id: profileSubreddit
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                # width: 730
+                font_size: 20
+                hint_text: "subreddit name"
+                halign: "center"
+                multiline: False
+                write_tab: False
+            Button:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                # width: 730
+                text: "Add"
+                background_color: 'green'
+                background_normal: 'transparent'
+                background_down: 'transparent'
+                on_press: root.fetch_profile_inputs()
+
+<EditProfileScreen>:
+    bl1: boxLayout1
+    bl2: boxLayout2
+    st1: testStackLayout1
+    ti1: profileName
+    
+    GridLayout:
+        cols: 2
+        rows: 1
+
+        ScrollView:
+            id: svScrollBar1
+            do_scroll_x: False
+            do_scroll_y: True
+            effect_cls: 'ScrollEffect'
+            size_hint_x: None
+            width: 100
+
+            BoxLayout:
+                id: boxLayout1
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+
+                Button:
+                    size_hint_y: None
+                    text: "<"
+                    on_press: root.manager.current = 'start'
+                    font_size: 40
+                    disabled: False
+                    background_color: "black"
+
+        StackLayout:
+            id: testStackLayout1
+            size_hint_y: 1
+            size_hint_x: 1
+
+            Label:
+                id: labelTotalSavedProfiles
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                text: "0 Saved Profiles"
+                bold: True
+            TextInput:
+                id: profileName
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                font_size: 20
+                hint_text: "select profile"
+                halign: "center"
+                disabled: True,
+                multiline: False
+                write_tab: False
+
+            # Label:
+            #     size_hint_y: None
+            #     size_hint_x: 1
+            #     height: 40
+            #     text: "All Profiles"
+
+            ScrollView:
+                id: svScrollBar2
+                do_scroll_x: False
+                do_scroll_y: True
+                effect_cls: 'ScrollEffect'
+                size_hint_y: None
+                size_hint_x: 1
+                height: 580 # 440 + 80
+
+                BoxLayout:
+                    id: boxLayout2
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: self.minimum_height
+
+            Button:
+                size_hint_y: None
+                size_hint_x: 1
+                height: 40
+                background_color: 'red'
+                background_normal: 'transparent'
+                background_down: 'transparent'
+                text: "Remove"
+                on_press: root.DeleteProfile()
+
+<FavoritesScreen>:
+    bl1: boxLayout1
+    
+    GridLayout:
+        cols: 2
+        rows: 1
+
+        ScrollView:
+            id: svScrollBar2
+            do_scroll_x: False
+            do_scroll_y: True
+            effect_cls: 'ScrollEffect'
+            size_hint_x: None
+            width: 100
+
+            BoxLayout:
+                id: boxLayout1
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                Button:
+                    size_hint_y: None
+                    text: "<"
+                    on_press: root.manager.current = 'start'
+                    font_size: 40
+                    disabled: False
+                    background_color: "black"
+        
+        ScrollView:
+            id: svScrollBar
+            effect_cls: 'ScrollEffect'
+            
+            BoxLayout:
+                id: boxLayoutPost
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 10
+                padding: 10
+
+<BlankScreen>:
+""")
+# Builder.load_file("ScraperNews.kv")
+
+
+#------ KIVY SETTINGS ------#
+kivy.require('2.0.0')
+Window.set_icon("logo.ico") # Window.set_icon("icon.png")
+Window.size = (1000, 700) #width, height
+# Config.set('kivy','window_icon', 'icon.png')
+# Config.set('input', 'mouse', 'mouse,multitouch_on_demand') #removes right click display red dot
+# Config.set('graphics', 'resizable', '1') #changing this might break display resolution
+# Config.set('graphics', 'fullscreen', '0') #changing this might break display resolution
+# Config.write()
+
+
+#------ GLOBALS ------#
+global counterSTP; counterSTP = -1 # saved twitter posts
+global counterSYP; counterSYP = -1 # saved youtube posts
+global counterSNA; counterSNA = -1 # saved news articles
+global counterSSP; counterSSP = -1 # saved subeddit posts
+global counterTNS; counterTNS = 1 # total news card
+savedTwitterPosts = []
+savedYoutubePosts = []
+savedNewsArticles = []
+savedSubredditPosts = []
+twitterDomain = "https://nitter.privacydev.net/" # https://xcancel.com/
+redditDomain = "https://libreddit.privacydev.net/r/joerogan/hot"
+youtubeDomain = "https://invidious.privacydev.net/search?q=joe+rogan"
+articlesDomain = "https://duckduckgo.com/?hps=1&q=joe+rogan&iar=news&ia=news"
+profilePicDomain = "https://duckduckgo.com/?hps=1&q=joe+rogan&iax=images&ia=images&iaf=size%3AMedium"
+
+
+#------ FUNCTIONS ------#
 def fetch_news_feed(profile, self):
+    
     #variables
     global counterTNS
     counterTNS = 0
@@ -84,6 +780,7 @@ def fetch_news_feed(profile, self):
 
 
 def fetch_news_articles(self, name, profile):
+    
     #variables
     global counterSNA
     global savedNewsArticles
@@ -94,7 +791,7 @@ def fetch_news_articles(self, name, profile):
     numberOfArticlesLimit = 10
     
     #request news articles
-    httpRequest = requests.get("https://www.google.com/search?q=" + name + "&source=lmns&tbm=nws&hl=en-US", headers=requestHeaders)
+    httpRequest = requests.get("https://whoogle.privacydev.net/search?q=" + name + "&source=lmns&tbm=nws&hl=en-US", headers=requestHeaders)
     
     #handle request results
     if httpRequest.status_code == 200:
@@ -169,6 +866,7 @@ def fetch_news_articles(self, name, profile):
 
 
 def fetch_youtube_channel(self, url, profile):
+    
     #null check
     if url == "": print("youtube channel is null"); return
     elif 'http' not in url: print("youtube channel is null"); return
@@ -275,6 +973,7 @@ def fetch_youtube_channel(self, url, profile):
 
 
 def fetch_twitter_profile(self, username, profile):
+    
     #null check
     if username == "":
         print("twitter username is null"); 
@@ -289,7 +988,7 @@ def fetch_twitter_profile(self, username, profile):
     name = profile['name']
 
     #request twitter profile
-    httpRequest = requests.get("https://nitter.net/" + username)
+    httpRequest = requests.get(twitterDomain + username)
     
     #handle request result
     if httpRequest.status_code == 200:
@@ -416,7 +1115,7 @@ def fetch_subreddit(self, name, profile):
     profileName = profile['name']
 
     #request news articles
-    httpRequest = requests.get("https://libreddit.de/r/" + name + "/hot")
+    httpRequest = requests.get(redditDomain + name + "/hot")
     
     #handle request results
     if httpRequest.status_code == 200:
@@ -467,7 +1166,7 @@ def fetch_subreddit(self, name, profile):
                 link = str(link)
                 link = link.replace("<a href=\"", "")
                 link = link.split("/\">")[0]
-                link = "https://libreddit.de" + link
+                link = "https://libreddit.privacydev.net" + link
 
                 date = regexDate[count]
                 date = str(date)
@@ -505,6 +1204,7 @@ def fetch_subreddit(self, name, profile):
 
 
 def nitterFilterPost(type, obj, link):
+    
     #replace characters
     link = str(link)
     link = link.replace(" ", "-")
@@ -584,7 +1284,7 @@ def nitterFilterPost(type, obj, link):
             link = link.replace("['<a class=\"tweet-link\" href=\"/", "")
             link = link.replace("\"></a>']", "")
             link = link.replace("#m", "")
-            link = "https://nitter.net/" + link
+            link = twitterDomain + link
             return link
 
         #null check
@@ -669,7 +1369,7 @@ def nitterFilterPost(type, obj, link):
                 vid = vid.replace("class=\"gallery-video\"><div class=\"attachment video-container\">", "")
                 vid = vid.replace("<img src=\"/", "")
                 vid = vid.replace("\"/>", "")
-                vid = "https://nitter.net/" + vid
+                vid = twitterDomain + vid
                 videosArray.append(vid)
             return videosArray
 
@@ -701,7 +1401,7 @@ def nitterFilterPost(type, obj, link):
 
                 #download img
                 # img = img.replace("%3Fname%3Dsmall", "")
-                # img = "https://nitter.net/" + img
+                # img = twitterDomain + img
                 # img_data = requests.get(img).content
                 # with open(os.getcwd() + "/temp/" + str(link) + "-" + str(count) + ".jpg", 'wb') as handler: handler.write(img_data)
                 
@@ -772,6 +1472,7 @@ def nitterFilterPost(type, obj, link):
 
 
 def displayNewsCard(self, id, username, type, platform, profileData):
+    
     #check card id
     if id == 1: 
         cardObj = self.ids.newsCard1Post; 
@@ -830,8 +1531,7 @@ def undisplayNewsCard(self, id):
     elif id == 4: self.ids.boxLayoutNewsCard4.opacity = 0
 
 
-
-### code ###
+#------ CLASSES ------#
 class NewsFeedScreen(Screen):
     def __init__(self, **var_args):
         super(NewsFeedScreen, self).__init__(**var_args)
@@ -1500,3 +2200,227 @@ class NewsFeedScreen(Screen):
             card.background_color = colorSubreddit
             buttonFavorites.background_color = colorSubreddit
             buttonLink.background_color = colorSubreddit
+
+
+class FavoritesScreen(Screen):
+    def __init__(self, **var_args):
+        super(FavoritesScreen, self).__init__(**var_args)
+
+
+    def on_pre_enter(self, *args):
+        print("FavoritesScreen")
+
+        #clear card widgets
+        self.ids.boxLayoutPost.clear_widgets()
+
+        #fetch saved profiles
+        savedProfiles = fetch_saved_profiles()
+
+        #set saved profiles count
+        totalSavedProfiles = len(savedProfiles)
+
+        #set total layout buttons
+        totalButtons = len(self.ids.boxLayoutPost.children)
+
+        #fetch saved favorites
+        favorites = fetch_saved_favorites()
+
+        #set saved favorites count
+        totalFavorites = len(favorites)
+
+        #fill side panel with buttons
+        # for x in range(6):
+            # NewsFeedScreen.AddFillerButtons(self)
+
+        #create labels
+        lbl1 = Label(size_hint_y = None, size_hint_x = 1, height = 10, text = "")
+        lbl2 = Label(size_hint_y = 1, size_hint_x = 1, text = str(len(favorites)) + " Saved Posts", bold = True)
+        lbl3 = Label(size_hint_y = None, size_hint_x = 1, height = 10, text = "")
+
+        #add widgets
+        self.ids.boxLayoutPost.add_widget(lbl1)
+        self.ids.boxLayoutPost.add_widget(lbl2)
+        for fav in favorites[::-1]:
+            if totalButtons < totalFavorites:
+                bl = NewsFeedScreen.createNewsCard(self, fav)
+                self.ids.boxLayoutPost.add_widget(bl)
+        self.ids.boxLayoutPost.add_widget(lbl3)
+
+
+class EditProfileScreen(Screen):
+    def __init__(self, **var_args):
+        super(EditProfileScreen, self).__init__(**var_args)
+        
+
+    def on_pre_enter(self, *args):
+        print("EditProfileScreen")
+
+        #clear saved profile list
+        self.ids.boxLayout2.clear_widgets()
+        
+        #fetch saved profiles
+        savedProfiles = fetch_saved_profiles()
+
+        #set saved profiles count
+        totalSavedProfiles = len(savedProfiles)
+
+        #set layout buttons count
+        totalButtons = len(self.ids.boxLayout2.children)
+
+        #add saved profiles buttons
+        if totalButtons != totalSavedProfiles:
+            #clear widgets
+            self.ids.boxLayout2.clear_widgets()
+
+            #add buttons
+            for x in range(totalSavedProfiles):
+                reverseListCount = (totalSavedProfiles - 1) - x # reverse list to make latest added on top
+                EditProfileScreen.AddProfileButtons(self, savedProfiles[reverseListCount])
+
+            #set total saved profiles
+            self.ids.labelTotalSavedProfiles.text = str(totalSavedProfiles) + " Saved Profiles"
+        
+        #fill side panel with filler buttons
+        # for x in range(6):
+            # NewsFeedScreen.AddFillerButtons(self)
+
+
+    def AddProfileButtons(self, profile):
+        #create button
+        newButton = Button(
+            size_hint_y = None,
+            height = 40,
+            text = profile['name'],
+            background_color = get_color_from_hex("#292f33")
+        )
+
+        #add functions to buttons
+        newButton.bind(on_press=lambda *args: EditProfileScreen.FillTextInputWithData(self, profile))
+
+        #add button layout
+        self.ids.boxLayout2.add_widget(newButton)
+
+
+    def DeleteProfile(self):
+        #variables
+        name = self.ti1.text
+        
+        #fetch saved profiles
+        profiles = fetch_saved_profiles()
+
+        #remove saved profile from list
+        count = 0
+        for p in profiles:
+            if p['name'] == name: profiles.pop(count)
+            count += 1
+
+        #remove profile from profiles.json
+        out_file = open("profiles.json", "w")
+        json.dump(profiles, out_file, indent = 6)
+        out_file.close()
+
+        #fetch saved profiles thumbnails
+        thumbnails = os.listdir(os.getcwd() + '/thumbnails')
+
+        #remove saved profile thumbnail file
+        # for image in thumbnails:
+        #     imageFile = os.getcwd() + '/thumbnails' + '/' + image
+        #     if name in image:
+        #         try: os.remove(imageFile)
+        #         except: print("delete thumbnail " + name + " failed")
+
+        #clear text inputs
+        self.ti1.text = ""
+
+        #refresh edit screen
+        refreshScreen(self, 'edit')
+
+
+    def FillTextInputWithData(self, profile):
+        self.ti1.text = profile['name']
+
+
+class BlankScreen(Screen):
+    def __init__(self, **var_args):
+        super(BlankScreen, self).__init__(**var_args)
+    
+
+    def on_pre_enter(self, *args):
+        print("BlankScreen")
+
+
+class AddProfileScreen(Screen):
+    def __init__(self, **var_args):
+        super(AddProfileScreen, self).__init__(**var_args)
+    
+
+    def on_pre_enter(self, *args):
+        print("AddProfileScreen")
+
+        #fetch saved profiles
+        savedProfiles = fetch_saved_profiles()
+
+        #set saved profiles count
+        totalSavedProfiles = len(savedProfiles)
+        
+        
+    def fetch_profile_inputs(self):
+        #variables
+        profileName = self.ti1.text
+        profileYoutube = self.ti2.text
+        profileTwitter = self.ti3.text
+        profileArticles = self.ti4.text
+        profileSubreddit = self.ti5.text
+
+        #add profile
+        add_profile(self, profileName, profileYoutube, profileTwitter, profileArticles, profileSubreddit)
+
+        #clear text inputs
+        self.ti1.text = ""
+        self.ti2.text = ""
+        self.ti3.text = ""
+        self.ti4.text = ""
+        self.ti5.text = ""
+
+
+class ScraperNewsApp(App): #the Base Class of our Kivy App
+    def build(self):
+        #check if exists
+        profiles_exists = os.path.exists('profiles.json')
+        favorites_exists = os.path.exists('favorites.json')
+        thumbnails_exists = os.path.isdir('thumbnails')
+
+        #set window title
+        self.title = "ScraperNews · " + str(year_progress())
+        # self.title = "Scraper News - " + str(year_progress())
+
+        if profiles_exists == False:
+            #create profiles.json
+            file = open('profiles.json', "w")
+            file.write("[]")
+            file.close()
+
+        if favorites_exists == False:
+            #create profiles.json
+            file = open('favorites.json', "w")
+            file.write("[]")
+            file.close()
+
+        if thumbnails_exists == False:
+            #create thumbnails
+            os.mkdir('thumbnails')
+        
+        #set screen manager configs
+        sm = ScreenManager()
+        sm = ScreenManager(transition=NoTransition())
+        sm.add_widget(NewsFeedScreen(name='start'))
+        sm.add_widget(AddProfileScreen(name='add'))    
+        sm.add_widget(EditProfileScreen(name='edit'))    
+        sm.add_widget(FavoritesScreen(name='favorites'))  
+        sm.add_widget(BlankScreen(name='blank'))
+
+        return sm
+
+
+#------ START APP ------#
+if __name__ == '__main__': ScraperNewsApp().run()

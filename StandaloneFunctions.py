@@ -12,21 +12,6 @@ import pyclip
 
 
 ### functions ###
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def year_progress():
     #variables
     JAN = 31

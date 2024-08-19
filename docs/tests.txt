@@ -1,0 +1,18 @@
+profile
+ add profile
+ load profile news feed
+ remove profile
+
+browse
+ browse articles cards
+ browse youtube cards
+ browse twitter cards
+ browse subreddit cards
+
+check
+ check newsfeed card link
+ check favorites card link
+
+card:
+ save card
+ remove card
