@@ -7,12 +7,8 @@ import os
 import pyclip
 import kivy
 import emoji
-# import time
-# import sys
-# import webbrowser
 from threading import Thread
 from bs4 import BeautifulSoup
-# from functools import partial
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.button import Button
@@ -25,8 +21,6 @@ from kivy.uix.stacklayout import StackLayout
 from kivy.utils import get_color_from_hex
 from kivy.lang import Builder
 from kivy.core.window import Window
-# from kivy.graphics import Rectangle, Color
-# from kivy.uix.image import Image, AsyncImage
 
 
 #------ LOAD KIVY UI ------#
@@ -831,9 +825,10 @@ def year_progress():
     totalDaysThisYear = 365
 
     #set current dates
-    year = datetime.datetime.now().year
-    month = datetime.datetime.now().month
-    day = datetime.datetime.now().day
+    dateObj = datetime.datetime.now()
+    year = dateObj.year
+    month = dateObj.month
+    day = dateObj.day
 
     #check if leap year
     if year == 2024: totalDaysThisYear = 366
@@ -880,7 +875,7 @@ def fetch_news_feed(profile, self):
     articles = profile['articles']
     subreddit = profile['subreddit']
     youtube = str(youtube).replace("https://www.youtube.com/", "").replace("youtube.com", "").replace("/videos", "")
-    profiles = json.load(open('profiles.json', "r"))
+    profiles = json.load(open('data/profiles.json', "r"))
     articlesExists = False
     youtubeExists = False
     twitterExists = False
@@ -1044,7 +1039,7 @@ def fetch_youtube_channel(self, profile):
         name = profile['name']
         youtubeName = profile['youtube']
         
-        #fetch channel id/videos
+        #fetch channel id/name
         httpRequest1 = requests.get(DOMAIN_YOUTUBE + "/search?q=" + youtubeName, timeout=LIMIT_DEFAULT_TIMEOUT)
         regexChannelName = re.findall(r'<a href="/channel/[\w\d._-]*">', httpRequest1.text)
         youtubeChannelId = regexChannelName[0].replace('<a href=\"/channel/', "").replace('">', "")
@@ -1066,6 +1061,7 @@ def fetch_youtube_channel(self, profile):
             vduration = regexChannelVideoDurations[counter - 1].replace('<p class="length">', "").replace("</p>", "")
             channelVideoObjects.append({"id": vid, "date": vuploadDate, "duration": vduration, "title": vtitle, "link": "https://www.youtube.com" + vlink})
         
+        #update globals
         setGlobal("TOTAL_POSTS_YOUTUBE", len(channelVideoObjects))
 
         #youtube videos null check
@@ -1227,8 +1223,7 @@ def fetch_subreddit(self, name, profile):
         elif TOTAL_POSTS_SUBREDDIT > 0:
             
             #set total posts
-            if TOTAL_POSTS_SUBREDDIT < 10: 
-                setGlobal("LIMIT_SUBREDDIT_POSTS", TOTAL_POSTS_SUBREDDIT)
+            if TOTAL_POSTS_SUBREDDIT < 10: setGlobal("LIMIT_SUBREDDIT_POSTS", TOTAL_POSTS_SUBREDDIT)
            
             #format post text
             for item in regexTitle:
@@ -1286,11 +1281,11 @@ def fetch_subreddit(self, name, profile):
 def fetch_saved_file(type):
 
     if type == "profiles":
-        profiles = json.load(open('profiles.json', "r"))
+        profiles = json.load(open('data/profiles.json', "r"))
         return profiles
 
     elif type == "favorites":
-        favorites = json.load(open('favorites.json', "r"))
+        favorites = json.load(open('data/favorites.json', "r"))
         return favorites
 
 
@@ -1814,8 +1809,8 @@ class NewsFeedScreen(Screen):
             fav_img = post['profilepic']
             fav_link = post['link']
 
-            #load favorites.json
-            favorites = json.load(open('favorites.json', "r"))
+            #load favorites file
+            favorites = json.load(open('data/favorites.json', "r"))
 
             #check if post already saved
             for f in favorites:
@@ -1837,8 +1832,8 @@ class NewsFeedScreen(Screen):
             #log
             print("save post:"); print(post)
 
-            #update favorites.json
-            out_file = open("favorites.json", "w"); json.dump(favorites, out_file, indent = 6); out_file.close()
+            #update favorites file
+            out_file = open("data/favorites.json", "w"); json.dump(favorites, out_file, indent = 6); out_file.close()
 
         #error: save post failed
         except Exception as e:
@@ -1849,14 +1844,14 @@ class NewsFeedScreen(Screen):
         print("favorites_remove") #log
 
         #variables
-        favorites = json.load(open('favorites.json', "r"))
+        favorites = json.load(open('data/favorites.json', "r"))
         
         #remove selected favorite
         count = 0
         for f in favorites:
             if f['id'] == cardId:
                 favorites.pop(count)
-                out_file = open("favorites.json", "w")
+                out_file = open("data/favorites.json", "w")
                 json.dump(favorites, out_file, indent = 6)
                 out_file.close()
             count += 1
@@ -1882,7 +1877,7 @@ class NewsFeedScreen(Screen):
         colorSubreddit = get_color_from_hex('#ff4500')
         imgSrc = os.getcwd() + obj['img']
         img = obj['img']
-        favorites = json.load(open('favorites.json', "r"))
+        favorites = json.load(open('data/favorites.json', "r"))
 
         #check platform
         if platform == "twitter": platformText = "X"
@@ -1949,7 +1944,7 @@ class NewsFeedScreen(Screen):
         elif type == "subreddit" and len(SAVED_POSTS_SUBREDDIT) != 0: pyclip.copy(SAVED_POSTS_SUBREDDIT[COUNTER_SAVED_SUBREDDIT_POSTS]['link'])
         else: pyclip.copy(type) # favorites screen
        
-        #debugging
+        #log
         clipboardText = pyclip.paste(text=True); print("copy_to_clipboard: " + clipboardText) 
 
 
@@ -1959,8 +1954,7 @@ class NewsFeedScreen(Screen):
         if type == "youtube" and TOTAL_POSTS_YOUTUBE > 0: 
             
             #check if last card
-            if COUNTER_SAVED_YOUTUBE_POSTS == TOTAL_POSTS_YOUTUBE - 1: 
-                setGlobal("COUNTER_SAVED_YOUTUBE_POSTS", -1)
+            if COUNTER_SAVED_YOUTUBE_POSTS == TOTAL_POSTS_YOUTUBE - 1: setGlobal("COUNTER_SAVED_YOUTUBE_POSTS", -1)
             
             #increment counter
             setGlobal("COUNTER_SAVED_YOUTUBE_POSTS", COUNTER_SAVED_YOUTUBE_POSTS + 1)
@@ -1985,8 +1979,7 @@ class NewsFeedScreen(Screen):
         elif type == "twitter" and TOTAL_POSTS_TWITTER > 0:
             
             #check if last
-            if COUNTER_SAVED_X_POSTS == TOTAL_POSTS_TWITTER - 1: 
-                setGlobal("COUNTER_SAVED_X_POSTS", -1)
+            if COUNTER_SAVED_X_POSTS == TOTAL_POSTS_TWITTER - 1: setGlobal("COUNTER_SAVED_X_POSTS", -1)
         
             #increment counter
             setGlobal("COUNTER_SAVED_X_POSTS", COUNTER_SAVED_X_POSTS + 1) 
@@ -2015,8 +2008,7 @@ class NewsFeedScreen(Screen):
         elif type == "article" and TOTAL_POSTS_ARTICLES > 0:
             
             #check if last
-            if COUNTER_SAVED_NEWS_ARTICLES == TOTAL_POSTS_ARTICLES - 1: 
-                setGlobal("COUNTER_SAVED_NEWS_ARTICLES", -1)
+            if COUNTER_SAVED_NEWS_ARTICLES == TOTAL_POSTS_ARTICLES - 1: setGlobal("COUNTER_SAVED_NEWS_ARTICLES", -1)
             
             #increment counter
             setGlobal("COUNTER_SAVED_NEWS_ARTICLES", COUNTER_SAVED_NEWS_ARTICLES + 1)
@@ -2042,8 +2034,7 @@ class NewsFeedScreen(Screen):
         elif type == "subreddit" and TOTAL_POSTS_SUBREDDIT > 0:
             
             #check if last
-            if COUNTER_SAVED_SUBREDDIT_POSTS == (len(SAVED_POSTS_SUBREDDIT) - 1): 
-                setGlobal("COUNTER_SAVED_SUBREDDIT_POSTS", -1)
+            if COUNTER_SAVED_SUBREDDIT_POSTS == (len(SAVED_POSTS_SUBREDDIT) - 1): setGlobal("COUNTER_SAVED_SUBREDDIT_POSTS", -1)
 
             #increment counter
             setGlobal("COUNTER_SAVED_SUBREDDIT_POSTS", COUNTER_SAVED_SUBREDDIT_POSTS + 1)
@@ -2178,10 +2169,10 @@ class AddProfileScreen(Screen):
         totalProfiles = 0
         youtubeChannelName = youtube
 
-        #load profiles.json
+        #load profiles file
         try: 
             #variables
-            profiles = json.load(open('profiles.json', "r"))
+            profiles = json.load(open('data/profiles.json', "r"))
             totalProfiles = len(profiles)
             
             #name is taken
@@ -2191,9 +2182,9 @@ class AddProfileScreen(Screen):
             #name is null
             if name == "": print("profile name empty"); return
         
-        #create profiles.json
+        #create profiles file
         except: 
-            file = open('profiles.json', "w")
+            file = open('data/profiles.json', "w")
             file.close()
 
         #youtube url check
@@ -2214,9 +2205,9 @@ class AddProfileScreen(Screen):
             "profilepic": profileImageUrl
         }
 
-        #add profile to profiles.json
+        #add profile to profiles file
         profiles.append(newProfile)
-        out_file = open("profiles.json", "w")
+        out_file = open("data/profiles.json", "w")
         json.dump(profiles, out_file, indent = 6)
         out_file.close()
 
@@ -2299,8 +2290,8 @@ class RemoveProfileScreen(Screen):
             if p['name'] == name: profiles.pop(count)
             count += 1
 
-        #remove profile from profiles.json
-        out_file = open("profiles.json", "w")
+        #remove profile from profiles file
+        out_file = open("data/profiles.json", "w")
         json.dump(profiles, out_file, indent = 6)
         out_file.close()
 
@@ -2343,8 +2334,9 @@ class ScraperNewsApp(App):
         self.title = "Scraper News" #"Scraper News · " + str(year_progress())
 
         #create files/directories
-        if os.path.exists('profiles.json') == False: file = open('profiles.json', "w"); file.write("[]"); file.close()
-        if os.path.exists('favorites.json') == False: file = open('favorites.json', "w"); file.write("[]"); file.close()
+        if os.path.isdir('data') == False: os.mkdir('data')
+        if os.path.exists('data/profiles.json') == False: file = open('data/profiles.json', "w"); file.write("[]"); file.close()
+        if os.path.exists('data/favorites.json') == False: file = open('data/favorites.json', "w"); file.write("[]"); file.close()
         if os.path.isdir('thumbnails') == False: os.mkdir('thumbnails')
         
         #set kivy screen manager configs

@@ -4,7 +4,7 @@
 - LoC: ~
 - [Logo]()
 - Features:
-- \--- Add Profile (Youtube, Twitter, Articles, Subreddit)
+- \--- Add Profile (Youtube, X, Articles, Subreddit)
 - \--- Fetch Profile News Feed
 - \--- Save Posts
 - \--- Copy Post Link
@@ -15,11 +15,16 @@
 
 ### Code
 - [Fetch News Feed]()
-- [Fetch Youtube Channel]()
-- [Fetch Twitter Profile]()
-- [Fetch News Articles]()
-- [Fetch Subreddit]()
+- [Fetch Profile Youtube Channel]()
+- [Fetch Profile X]()
+- [Fetch Profile News Articles]()
+- [Fetch Profile Subreddit]()
+- [Fetch Profile Picture]()
 ###
 - [Profile - Add]()
+- [Profile - Remove]()
 ###
 - [Post - Save to Favorites]()
+- [Post - Remove from Favorites]()
+###
+- [Others - Check Domain Status]()
