@@ -1,0 +1,20 @@
+[
+      {
+            "id": 1,
+            "name": "mkbhd",
+            "youtube": "mkbhd",
+            "twitter": "mkbhd",
+            "articles": "mkbhd",
+            "subreddit": "mkbhd",
+            "profilepic": "/thumbnails/mkbhd.jpg"
+      },
+      {
+            "id": 2,
+            "name": "joe rogan",
+            "youtube": "joerogan",
+            "twitter": "joerogan",
+            "articles": "joe rogan",
+            "subreddit": "joerogan",
+            "profilepic": "/thumbnails/joe_rogan.png"
+      }
+]

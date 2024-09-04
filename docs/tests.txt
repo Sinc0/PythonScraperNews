@@ -1,18 +1,26 @@
-profile
- add profile
- load profile news feed
- remove profile
+profile:
+ - add
+ - remove
+ - load news feed
 
-browse
- browse articles cards
- browse youtube cards
- browse twitter cards
- browse subreddit cards
+fetch:
+ - newsfeed
+ - profile pic
+ - article
+ - youtube
+ - twitter
+ - subreddit
 
-check
- check newsfeed card link
- check favorites card link
+next post:
+ - article
+ - youtube
+ - twitter
+ - subreddit
 
-card:
- save card
- remove card
+links:
+ - newsfeed post link (X, youtube, article, subreddit)
+ - saved post link (X, youtube, article, subreddit)
+
+favorites:
+ - save post
+ - remove post
