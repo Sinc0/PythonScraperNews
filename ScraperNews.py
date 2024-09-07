@@ -798,7 +798,7 @@ DOMAIN_TWITTER = "https://nitter.lucabased.xyz"
 DOMAIN_REDDIT = "https://libreddit.privacydev.net"
 DOMAIN_YOUTUBE = "https://invidious.privacyredirect.com"
 DOMAIN_ARTICLES = "https://search.brave.com/news"
-DOMAIN_PROFILE_PIC = "https://wikiless.privacyredirect.com/wiki/"
+DOMAIN_PROFILE_PIC = "https://wikiless.privacyredirect.com"
 LIMIT_ARTICLES = 10
 LIMIT_YOUTUBE_POSTS = 10
 LIMIT_TWEETS = 10
@@ -810,29 +810,36 @@ LIMIT_DEFAULT_TIMEOUT = 10
 def year_progress():
     
     #variables
-    JAN = 31
-    FEB = JAN + 28
-    MAR = FEB + 31
-    APR = MAR + 30
-    MAY = APR + 31
-    JUN = MAY + 30
-    JUL = JUN + 31
-    AUG = JUL + 31
-    SEP = AUG + 30
-    OCT = SEP + 31
-    NOV = OCT + 30
-    DEC = NOV + 31
+    leapYear = False
     totalDaysThisYear = 365
-
-    #set current dates
+    daysInFeb = 28
     dateObj = datetime.datetime.now()
     year = dateObj.year
     month = dateObj.month
     day = dateObj.day
 
     #check if leap year
-    if year == 2024: totalDaysThisYear = 366
-    
+    if year == 2024: leapYear = True
+        
+    #year is leap year
+    if leapYear == True: 
+        totalDaysThisYear = 366
+        daysInFeb = 29
+
+    #set month total days
+    JAN = 31
+    FEB = daysInFeb + JAN 
+    MAR = 31 + FEB
+    APR = 30 + MAR
+    MAY = 31 + APR
+    JUN = 30 + MAY 
+    JUL = 31 + JUN
+    AUG = 31 + JUL
+    SEP = 30 + AUG 
+    OCT = 31 + SEP 
+    NOV = 30 + OCT 
+    DEC = 31 + NOV
+
     #set month name
     if month == 1: month = "Jan"; dayOfTheYear = day
     elif month == 2: month = "Feb"; dayOfTheYear = JAN + day
@@ -848,7 +855,7 @@ def year_progress():
     elif month == 12: month = "Dec"; dayOfTheYear = NOV + day 
             
     #set formatted date
-    formattedDate = formattedDate = str(day) + " " + str(month) + " " + str(year) + " · " + "Day " + str(dayOfTheYear) + "/" + str(totalDaysThisYear)
+    formattedDate = str(day) + " " + str(month) + " " + str(year) + " · " + "Day " + str(dayOfTheYear) + "/" + str(totalDaysThisYear)
     
     return formattedDate
 
@@ -1297,7 +1304,7 @@ def fetch_profile_image(name):
         #variables
         selectedImage = ""
         fileFormat = ""
-        response = requests.get(DOMAIN_PROFILE_PIC + name.replace(" ", "%20").lower() + "?lang=en", timeout=LIMIT_DEFAULT_TIMEOUT) #&category_general=&language=auto&time_range=&safesearch=1&theme=simple
+        response = requests.get(DOMAIN_PROFILE_PIC + "/wiki/" + name.replace(" ", "%20").lower() + "?lang=en", timeout=LIMIT_DEFAULT_TIMEOUT) #&category_general=&language=auto&time_range=&safesearch=1&theme=simple
         
         #profile image exists
         if response.status_code == 200:
@@ -1306,7 +1313,7 @@ def fetch_profile_image(name):
             
             for item in regexImages:
                 selectedImage = item.replace("src=\"/", "").replace('\"', "")
-                selectedImage = "https://wikiless.privacyredirect.com/" + selectedImage
+                selectedImage = DOMAIN_PROFILE_PIC + "/" + selectedImage
 
                 if ".jpg" in selectedImage: fileFormat = ".jpg"
                 elif ".png" in selectedImage: fileFormat = ".png"
@@ -1319,7 +1326,7 @@ def fetch_profile_image(name):
                     file.close()
                     return "/thumbnails/" + name + fileFormat
     
-    #error: fetch profile image error
+    #error: fetch profile image failed
     except Exception as e:
         print(e); print("error: profile image fetch failed")
         return "/images/fallbackProfilePic.png"

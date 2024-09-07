@@ -1,2 +1,5 @@
 python 3.8.10
 kivy 2.0.0
+pyclip 0.7.0
+emoji 2.12.1
+beautifulsoup4 4.11.1
