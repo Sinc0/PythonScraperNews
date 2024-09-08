@@ -1,30 +1,36 @@
 ### Summary
 - Name: Scraper News
-- Description: 
+- Description:
 - LoC: ~
-- [Logo]()
+- [Logo](https://github.com/Sinc0/PythonScraperNews/blob/master/images/icon.png)
 - Features:
-- \--- Add Profile (Youtube, X, Articles, Subreddit)
-- \--- Fetch Profile News Feed
+- \--- Save Profile (Youtube, X, Articles, Subreddit)
+- \--- Fetch News Feed
 - \--- Save Posts
-- \--- Copy Post Link
+- \--- Copy Post URL
 
 ### Technologies
 - [Python](https://www.python.org)
 - [Kivy](https://kivy.org)
 
 ### Code
-- [Fetch News Feed]()
-- [Fetch Profile Youtube Channel]()
-- [Fetch Profile X]()
-- [Fetch Profile News Articles]()
-- [Fetch Profile Subreddit]()
-- [Fetch Profile Picture]()
+- [Files - Main](https://github.com/Sinc0/PythonScraperNews/blob/master/ScraperNews.py)
+- [Files - UI](https://github.com/Sinc0/PythonScraperNews/blob/master/ScraperNews.kv)
+- [Files - Saved Profiles](https://github.com/Sinc0/PythonScraperNews/blob/master/data/profiles.json)
+- [Files - Saved Posts](https://github.com/Sinc0/PythonScraperNews/blob/master/data/favorites.json)
 ###
 - [Profile - Add]()
 - [Profile - Remove]()
 ###
+- [Fetch News Feed]()
+- [Fetch Youtube Channel]()
+- [Fetch X]()
+- [Fetch News Articles]()
+- [Fetch Subreddit]()
+- [Fetch Profile Picture]()
+###
 - [Post - Save to Favorites]()
 - [Post - Remove from Favorites]()
+- [Post - Copy URL]()
 ###
 - [Others - Check Domain Status]()
