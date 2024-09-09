@@ -14,23 +14,24 @@
 - [Kivy](https://kivy.org)
 
 ### Code
-- [Files - Main](https://github.com/Sinc0/PythonScraperNews/blob/master/ScraperNews.py)
-- [Files - UI](https://github.com/Sinc0/PythonScraperNews/blob/master/ScraperNews.kv)
-- [Files - Saved Profiles](https://github.com/Sinc0/PythonScraperNews/blob/master/data/profiles.json)
-- [Files - Saved Posts](https://github.com/Sinc0/PythonScraperNews/blob/master/data/favorites.json)
+- [File - Main](https://github.com/Sinc0/PythonScraperNews/blob/master/ScraperNews.py)
+- [File - UI](https://github.com/Sinc0/PythonScraperNews/blob/master/ScraperNews.kv)
+- [File - Saved Profiles](https://github.com/Sinc0/PythonScraperNews/blob/master/data/profiles.json)
+- [File - Saved Posts](https://github.com/Sinc0/PythonScraperNews/blob/master/data/favorites.json)
 ###
 - [Profile - Add]()
 - [Profile - Remove]()
 ###
-- [Fetch News Feed]()
-- [Fetch Youtube Channel]()
-- [Fetch X]()
-- [Fetch News Articles]()
-- [Fetch Subreddit]()
-- [Fetch Profile Picture]()
+- [Fetch - News Feed]()
+- [Fetch - Youtube Channel Videos]()
+- [Fetch - X Posts]()
+- [Fetch - News Articles]()
+- [Fetch - Subreddit Posts]()
+- [Fetch - Profile Picture]()
 ###
 - [Post - Save to Favorites]()
 - [Post - Remove from Favorites]()
 - [Post - Copy URL]()
 ###
 - [Others - Check Domain Status]()
+- [Others - Set Global Variable]()

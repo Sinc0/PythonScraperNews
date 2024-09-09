@@ -21,11 +21,6 @@ from kivy.lang import Builder
 from kivy.core.window import Window
 
 
-#------ LOAD KIVY UI ------#
-Builder.load_file("ScraperNews.kv")
-# Builder.load_string("""""")
-
-
 #------ GLOBALS ------#
 COUNTER_SAVED_X_POSTS = -1
 COUNTER_SAVED_YOUTUBE_POSTS = -1
@@ -50,6 +45,11 @@ LIMIT_YOUTUBE_POSTS = 10
 LIMIT_TWEETS = 10
 LIMIT_SUBREDDIT_POSTS = 10
 LIMIT_DEFAULT_TIMEOUT = 10
+
+
+#------ LOAD KIVY UI ------#
+Builder.load_file("ScraperNews.kv")
+# Builder.load_string("""""")
 
 
 #------ FUNCTIONS ------#
@@ -580,6 +580,7 @@ def fetch_profile_image(name):
 
 def twitterFilterPost(type, obj, link):
     
+    #Filter Text
     if type == "text":
 
         #format text
@@ -601,26 +602,7 @@ def twitterFilterPost(type, obj, link):
 
         return obj
 
-    elif type == "retweet":
-        #regex
-        retweet = re.findall(r'<div class="retweet-header">.*</span>', obj)
-        
-        #tweet is retweet
-        if(len(retweet) > 0): return "True"
-
-        #tweet is original
-        elif(len(retweet) == 0): return "False"
-
-    elif type == "pinned":
-        #regex
-        pinned = re.findall(r'<div class="pinned">', obj)
-        
-        #tweet is pinned
-        if(len(pinned) > 0): return "True"
-
-        #tweet is not pinned
-        elif(len(pinned) == 0): return "False"
-            
+    #Filter Date 
     elif type == "date":
         #regex
         date = re.findall(r'title=".*</a></span>', obj); date = date[0]
@@ -637,6 +619,7 @@ def twitterFilterPost(type, obj, link):
         #null check
         elif(len(link) == 0): return "False"
 
+    #Filter Link
     elif type == "link":
         #regex
         link = re.findall(r'<a class="tweet-link" href="/.*</a>', obj)
@@ -653,6 +636,7 @@ def twitterFilterPost(type, obj, link):
         #null check
         elif(len(link) == 0): return "False"
 
+    #Filter Total Likes
     elif type == "likes":
         #regex
         likes = re.findall(r'icon-heart" title=""></span>.*', obj)
@@ -668,8 +652,10 @@ def twitterFilterPost(type, obj, link):
 
         #null check
         elif(len(likes) == 0): return "False"
-            
+
+    #Filter Total Qoutes       
     elif type == "qoutes":
+        
         #regex
         qoutes = re.findall(r'icon-quote" title=""></span>.*', obj)
 
@@ -686,8 +672,10 @@ def twitterFilterPost(type, obj, link):
 
         #null check
         elif(len(qoutes) == 0): return "False"
-
+    
+    #Filter Total Retweets
     elif type == "retweets":
+        
         #regex
         retweets = re.findall(r'icon-retweet" title=""></span>.*', obj)
 
@@ -704,6 +692,7 @@ def twitterFilterPost(type, obj, link):
         #null check
         elif(len(retweets) == 0): return "False"
 
+    #Filter Total Comments
     elif type == "comments":
         #regex
         comments = re.findall(r'icon-comment" title=""></span>.*', obj)
@@ -718,7 +707,9 @@ def twitterFilterPost(type, obj, link):
             return comments
         elif(len(comments) == 0): return "False"
 
+    #Filter Video Links
     elif type == "videos":
+        
         #variables
         videosArray = []
 
@@ -739,6 +730,7 @@ def twitterFilterPost(type, obj, link):
         #null check
         elif(len(videos) == 0): return "False"
             
+    #Filter Image Link       
     elif type == "images":
         #variables
         imagesArray = []
@@ -773,6 +765,7 @@ def twitterFilterPost(type, obj, link):
         #null check
         elif(len(images) == 0): return "False"
 
+    #Filter Poll Text
     elif type == "poll":
         #regex
         poll = re.findall(r'<div class="poll-meter leader">\n.*</span>\n.*</span>\n.*</span>\n.*</div>', obj)
@@ -816,7 +809,30 @@ def twitterFilterPost(type, obj, link):
 
         #null check
         elif(len(pollLeader) == 1): return "False"
-            
+
+    #Retweet Check
+    elif type == "retweet":
+        #regex
+        retweet = re.findall(r'<div class="retweet-header">.*</span>', obj)
+        
+        #tweet is retweet
+        if(len(retweet) > 0): return "True"
+
+        #tweet is original
+        elif(len(retweet) == 0): return "False"
+
+    #Pinned Check
+    elif type == "pinned":
+        #regex
+        pinned = re.findall(r'<div class="pinned">', obj)
+        
+        #tweet is pinned
+        if(len(pinned) > 0): return "True"
+
+        #tweet is not pinned
+        elif(len(pinned) == 0): return "False"
+
+    #Youtube Check       
     elif type == "youtube":
         #regex
         obj = re.findall(r'https://piped.kavin.rocks/.*</div>', obj)
